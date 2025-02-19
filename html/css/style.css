@@ -1,17 +1,17 @@
 header{
-    background-color: white;
+    background-color: rgb(238, 238, 238);
 }
 
 article{
-    background-color: rgb(230, 236, 255);
+    background-color: rgb(238, 238, 238);
 }
 
 body{
-    background-color:white;
+    background-color:rgb(238, 238, 238);
 }
 
 footer {
-    background-color: white;
+    background-color: rgb(238, 238, 238);
     width: 100%;
     max-width: 2000px;
     margin: auto;
@@ -22,7 +22,7 @@ footer {
     text-align: left;
 }
 
-button {
+  .button {
     background-color: #008CBA;
     border: none;
     color: white;
@@ -33,4 +33,20 @@ button {
     font-size: 16px;
     margin-left: 10px;
     margin-right: 10px;
+  }
+
+  .button:hover, a:hover {
+    background-color: rgb(40, 40, 40);
+  }
+
+  .card {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    max-width: 300px;
+    margin: auto;
+    text-align: center;
+  }
+  
+  .title {
+    color: grey;
+    font-size: 18px;
   }
