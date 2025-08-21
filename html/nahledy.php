@@ -20,19 +20,122 @@ else
 ?>
 
 <body>
-    <article>
-        <?php
-        $dir = 'nahledy/'; // Directory where images are stored
+<script>
+        let previousImages = [];
 
-        $files = scandir($dir); // Scan the directory
+        /*
+        function refresh() {
+            fetch('nahledy/html_refresh.json')
+                .then(response => response.json())
+                .then(config => {
+                    const refreshValue = config.refresh;
+                    console.log("Refresh value:", refreshValue);
 
-        foreach ($files as $file) {
-            if ($file !== '.' && $file !== '..') {
-                // Display each image file
-                echo ("<img src='$dir$file' alt='$file' style='max-width: 500px; margin: 10px;'>");
-            }
+                    // Do something with refreshValue, for example:
+                        if (refreshValue === 1) {
+                        fetchImages(); // Reload the page
+                    }
+
+                })
+                .catch(error => {
+                    console.error("Error loading config:", error);
+                });
         }
-        ?>
-    </article>
+        */
+       async function obnova_stranky() {
+            console.log("Obnovuji stránku...");
+            await sleep(1000); // Wait for 1 second
+            location.reload(); // Reload the page
+        }
+
+        // Funkce pro zpoždění                 
+
+       function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+       function refresh() {          
+           fetch('get_images.php')
+                .then(response => response.json())
+                .then(images => {    
+                    //console.log("aktuální obrázky - " + JSON.stringify(images));
+                    //console.log("předchozí obrázky - " + JSON.stringify(previousImages));          
+                    if (JSON.stringify(images) !== JSON.stringify(previousImages)) {    
+                        console.log("Obrázky se změnily.");
+                        //location.reload(); // Reload the page if images have changed  
+                        obnova_stranky(); // Call the function to reload the page after a delay                              
+                    }
+                })
+                .catch(error => console.error('Error fetching images:', error));
+        }
+
+        function fetchImages() {
+            fetch('get_images.php')
+                .then(response => response.json())
+                .then(images => {                
+                    if (JSON.stringify(images) !== JSON.stringify(previousImages)) {    
+                        //console.log(images);
+                        //console.log(previousImages);                                       
+                        updateGallery(images);
+                        previousImages = images;                                   
+                    }
+                })
+                .catch(error => console.error('Error fetching images:', error));
+        }
+
+        function updateGallery(images) {
+            console.log('updateGallery');
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = ''; // Clear previous images
+            //$('.image-container').remove();
+            const div = document.createElement('div');
+            div.classList.add('image-container');
+            var img = "";
+            images.forEach(src => {
+                //const div = document.createElement('div');
+                //div.classList.add('image-container');
+                //div.innerHTML = `<img src="${src}" alt="Image" style="max-width: 500px; margin: 10px;">`;
+                //gallery.appendChild(div);
+                img = img + `<img src="${src}" alt="Image" style="max-width: 700px; margin: 10px;">`;
+            div.innerHTML = img;
+            gallery.appendChild(div);
+            });
+
+            // Přiřazení background color podle toho jestli je vada nebo ne
+            fetch('nahledy/html_config.json')
+            .then(response => response.json())
+            .then(configArray => {
+                var back_color = null;
+
+                for (const config of configArray) {
+                    console.log(`Camera ${config.camera_index} background color: ${config.background_color}`);
+                    back_color = config.background_color;
+
+                    if (back_color === "#FF0000"){
+                        break;
+                    }
+                }
+
+                const gallery = document.querySelector('.image-gallery');
+                if (gallery) {
+                gallery.style.backgroundColor = back_color;
+                console.log("Gallery background color set to:", back_color);
+                } else {
+                console.warn("No element with class 'image_gallery' found.");
+                }
+            })
+            .catch(error => {
+                console.error("Error loading config:", error);
+      });
+        }
+
+        // Fetch images every 5 seconds
+        setInterval(refresh, 1000); 
+        // setInterval(fetchImages, 4000); // 4000 milliseconds = 4 seconds
+        // setInterval(refresh, 1);
+        fetchImages(); // Initial load
+    </script>
+    <div class="image-gallery" id="gallery">>
+    </div>
 
     <?php include 'footer.php'; ?>
