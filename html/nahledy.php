@@ -41,12 +41,50 @@ else
                     console.error("Error loading config:", error);
                 });
         }
-        */
+        */               
+
+        function getTimestampFilename() {
+            const now = new Date();
+            const pad = (n, width = 2) => n.toString().padStart(width, "0");
+
+            const Y = now.getFullYear();
+            const m = pad(now.getMonth() + 1);
+            const d = pad(now.getDate());
+            const H = pad(now.getHours());
+            const M = pad(now.getMinutes());
+            const S = pad(now.getSeconds());
+            const f = pad(now.getMilliseconds(), 3); // ms (closest to microseconds)
+
+            return `${Y}_${m}_${d}__${H}_${M}_${S}_${f}.png`;
+        }
+
        async function obnova_stranky() {
             console.log("Obnovuji stránku...");
             await sleep(1000); // Wait for 1 second
             location.reload(); // Reload the page
         }
+
+        async function takeScreenshot() {
+            await sleep(1000);
+            
+            const element = document.getElementById('gallery');
+            //const element = document.body;
+
+            console.log("Taking screenshot of element:", element);
+
+            html2canvas(element).then(canvas => {
+                // Append canvas to body (preview)
+                //document.body.appendChild(canvas);
+
+                // Or download the image automatically
+                const filename = getTimestampFilename();
+
+                let link = document.createElement("a");
+                link.download = filename;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+            }
 
         // Funkce pro zpoždění                 
 
@@ -83,6 +121,7 @@ else
                 .catch(error => console.error('Error fetching images:', error));
         }
 
+        /*
         function updateGallery(images) {
             console.log('updateGallery');
             const gallery = document.getElementById('gallery');
@@ -128,12 +167,63 @@ else
                 console.error("Error loading config:", error);
       });
         }
+      */
+
+              function updateGallery(images) {
+            console.log('updateGallery');
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = ''; // Clear previous images
+            //$('.image-container').remove();
+            
+            i = 0;
+
+            images.forEach(src => {
+                const div = document.createElement('div');
+                div.classList.add(i);
+
+                div.style.float = 'left'; 
+                div.style.width = '50%';
+
+                div.innerHTML = `<img src="${src}" alt="Image" style="max-width: 800px; width:80%; margin: 10px;">`;
+                gallery.appendChild(div);
+
+                i++;
+            });
+
+            // Přiřazení background color podle toho jestli je vada nebo ne
+            fetch('nahledy/html_config.json')
+            .then(response => response.json())
+            .then(configArray => {
+                var back_color = null;
+
+                j = 0;
+
+                for (const config of configArray) {
+                    console.log(`Camera ${config.camera_index} background color: ${config.background_color}`);
+                    back_color = config.background_color;
+
+                    const gallery = document.getElementsByClassName(j)[0];
+                    if (gallery) {
+                    gallery.style.backgroundColor = back_color;
+                    console.log("Gallery background color set to:", back_color);
+                    } else {
+                    console.warn("No element with class 'image_gallery' found.");
+                    }
+
+                    j++;
+                }
+            })
+            .catch(error => {
+                console.error("Error loading config:", error);
+      });
+        }
 
         // Fetch images every 5 seconds
         setInterval(refresh, 1000); 
         // setInterval(fetchImages, 4000); // 4000 milliseconds = 4 seconds
         // setInterval(refresh, 1);
         fetchImages(); // Initial load
+        //window.onload = takeScreenshot;
     </script>
     <div class="image-gallery" id="gallery">>
     </div>
