@@ -1,52 +1,117 @@
-header{
+/* Base Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
     background-color: rgb(238, 238, 238);
+    color: #333;
+    line-height: 1.6;
 }
 
-article{
+/* Header */
+header {
+    background-color: #2c3e50; /* Dark blue-gray for a modern look */
+    color: white;
+    padding: 25px;
+    border-bottom: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 400;
+    color: white;
+}
+
+header p {
+    margin: 5px 0 0;
+    color: #bdc3c7; /* Light gray for contrast */
+    font-size: 18px;
+}
+
+/* Main Content */
+article {
     background-color: rgb(238, 238, 238);
+    padding: 30px;
+    min-height: calc(100vh - 160px);
 }
 
-body{
-    background-color:rgb(238, 238, 238);
+/* Gallery */
+#gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(800px, 1fr));
+    gap: 40px;
+    padding: 40px 20px;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
+#gallery > div {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+#gallery > div:hover {
+    transform: translateY(-5px);
+}
+
+#gallery img {
+    width: 100%;
+    height: auto;
+    max-height: 1000px;
+    object-fit: contain;
+    display: block;
+}
+
+/* Footer */
 footer {
-    background-color: rgb(238, 238, 238);
+    background-color: #34495e; /* Slightly lighter than header for hierarchy */
+    color: white;
     width: 100%;
     max-width: 2000px;
     margin: auto;
-    padding-top: 2%;
-    padding-bottom: 2%;
-    font-size: 25px;
-    /*background-image: url('/wp-content/themes/sdhdolniujezd/images/background.jpg');*/
-    text-align: left;
+    padding: 25px;
+    font-size: 16px;
+    text-align: center; /* Centered for balance */
+    border-top: none;
 }
 
-  .button {
-    background-color: #008CBA;
+/* Buttons */
+.button {
+    background-color: #3498db; /* Bright blue for calls to action */
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 12px 24px;
     text-align: center;
-    /*text-decoration: none;*/
     display: inline-block;
     font-size: 16px;
-    margin-left: 10px;
-    margin-right: 10px;
-  }
+    margin: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
 
-  .button:hover, a:hover {
-    background-color: rgb(40, 40, 40);
-  }
+.button:hover {
+    background-color: #2980b9; /* Darker blue on hover */
+}
 
-  .card {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    max-width: 300px;
-    margin: auto;
-    text-align: center;
-  }
-  
-  .title {
-    color: grey;
-    font-size: 18px;
-  }
+/* Responsive */
+@media (max-width: 1400px) {
+    #gallery {
+        grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    #gallery {
+        grid-template-columns: 1fr;
+    }
+    header h1 {
+        font-size: 26px;
+    }
+}
