@@ -1,13 +1,15 @@
 <?php include 'header.php'; ?>
 
 <?php
-if (isset($_GET['cisloStroj']) && isset($_GET['nazevStroj'])) 
+if (isset($_GET['cisloStroj']) && isset($_GET['nazevStroj']) && isset($_GET['popisStroj'])) 
 {
     $cisloStroj = htmlspecialchars($_GET['cisloStroj']);
     $nazevStroj = htmlspecialchars($_GET['nazevStroj']);
+    $popisStroj = htmlspecialchars($_GET['popisStroj']);
     /*
     echo "cisloStroj: " . $cisloStroj . "<br>";
     echo "nazevStroj: " . $nazevStroj . "<br>";
+    echo "popisStroj: " . $popisStroj . "<br>";
     */
 } 
 else 
@@ -15,12 +17,23 @@ else
     // Defaultní hodnoty
     $cisloStroj = "1";
     $nazevStroj = "testovaci_pracoviste";
+    $popisStroj = "Kontrola svárů- Flídr Metal s.r.o.";
     // echo "No parameters were passed!";
 }
 ?>
 
 <body>
+    <main>
+        <div class="gallery-container">
+            <div class="image-gallery" id="gallery"></div>
+        </div>
+    </main>
 <script>
+        // Make PHP variables available globally for footer
+        window.cisloStroj = "<?php echo $cisloStroj; ?>";
+        window.nazevStroj = "<?php echo $nazevStroj; ?>";
+        window.popisStroj = "<?php echo $popisStroj; ?>";
+        
         let previousImages = [];
 
         /*
@@ -93,7 +106,20 @@ else
         }
 
        function refresh() {          
-           fetch('get_images.php')
+            // Use PHP variables in JavaScript
+            const cisloStroj = "<?php echo $cisloStroj; ?>";
+            const nazevStroj = "<?php echo $nazevStroj; ?>";
+            const popisStroj = "<?php echo $popisStroj; ?>";
+
+            // Create a URL with query parameters
+            const params = new URLSearchParams({
+                cisloStroj: cisloStroj,
+                nazevStroj: nazevStroj,
+                popisStroj: popisStroj
+            });
+
+            // Use the URL with query parameters in fetch
+            fetch(`get_images.php?${params.toString()}`)
                 .then(response => response.json())
                 .then(images => {    
                     //console.log("aktuální obrázky - " + JSON.stringify(images));
@@ -108,7 +134,20 @@ else
         }
 
         function fetchImages() {
-            fetch('get_images.php')
+            // Use PHP variables in JavaScript
+            const cisloStroj = "<?php echo $cisloStroj; ?>";
+            const nazevStroj = "<?php echo $nazevStroj; ?>";
+            const popisStroj = "<?php echo $popisStroj; ?>";
+
+            // Create a URL with query parameters
+            const params = new URLSearchParams({
+                cisloStroj: cisloStroj,
+                nazevStroj: nazevStroj,
+                popisStroj: popisStroj
+            });
+
+            // Use the URL with query parameters in fetch
+            fetch(`get_images.php?${params.toString()}`)
                 .then(response => response.json())
                 .then(images => {                
                     if (JSON.stringify(images) !== JSON.stringify(previousImages)) {    
@@ -225,7 +264,5 @@ else
         fetchImages(); // Initial load
         //window.onload = takeScreenshot;
     </script>
-    <div class="image-gallery" id="gallery">>
-    </div>
 
     <?php include 'footer.php'; ?>

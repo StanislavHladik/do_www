@@ -1,5 +1,5 @@
 <?php
-if (isset($_GET['cisloStroj']) && isset($_GET['nazevStroj'])) 
+if (isset($_GET['cisloStroj']) && isset($_GET['nazevStroj']) && isset($_GET['popisStroj'])) 
 {
     $cisloStroj = htmlspecialchars($_GET['cisloStroj']);
     $nazevStroj = htmlspecialchars($_GET['nazevStroj']);
@@ -7,6 +7,7 @@ if (isset($_GET['cisloStroj']) && isset($_GET['nazevStroj']))
     /*
     echo "cisloStroj: " . $cisloStroj . "<br>";
     echo "nazevStroj: " . $nazevStroj . "<br>";
+    echo "popisStroj: " . $popisStroj . "<br>";
     */
 } 
 else 
@@ -31,4 +32,5 @@ else
     <body>   
         <header class="site-header">
         <h1><?php echo($popisStroj); ?></h1>
+        <p>Pracoviště č. <?php echo($cisloStroj); ?> - <?php echo($nazevStroj); ?></p>      
     </header>
