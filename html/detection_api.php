@@ -19,8 +19,46 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
 
-if (!$input || !isset($input['command'])) {
-    echo json_encode(['success' => false, 'message' => 'Invalid input - command required']);
+if (!$input) {
+    echo json_encode(['success' => false, 'message' => 'Invalid JSON input']);
+    exit();
+}
+
+// Handle different types of requests
+if (isset($input['action']) && $input['action'] === 'save_model_selection') {
+    // Handle model selection saving
+    $model_path = isset($input['model_path']) ? htmlspecialchars($input['model_path']) : '';
+    $machine_number = isset($input['machine_number']) ? htmlspecialchars($input['machine_number']) : '1';
+    
+    if (empty($model_path)) {
+        echo json_encode(['success' => false, 'message' => 'Model path is required']);
+        exit();
+    }
+    
+    $result = saveModelSelection($model_path, $machine_number);
+    echo json_encode($result);
+    exit();
+}
+
+if (isset($input['action']) && $input['action'] === 'restart_service') {
+    // Handle service restart
+    $machine_number = isset($input['machine_number']) ? htmlspecialchars($input['machine_number']) : '1';
+    
+    $result = restartDetectionService($machine_number);
+    echo json_encode($result);
+    exit();
+}
+
+if (isset($input['action']) && $input['action'] === 'check_restart_status') {
+    // Check restart status
+    $result = checkRestartStatus();
+    echo json_encode($result);
+    exit();
+}
+
+// Original command handling
+if (!isset($input['command'])) {
+    echo json_encode(['success' => false, 'message' => 'Invalid input - command or action required']);
     exit();
 }
 
@@ -30,6 +68,188 @@ $cisloStroj = isset($input['cisloStroj']) ? htmlspecialchars($input['cisloStroj'
 // Log the request
 $log_entry = date('Y-m-d H:i:s') . " - Command: $command, Machine: $cisloStroj\n";
 file_put_contents('/tmp/detection_api.log', $log_entry, FILE_APPEND | LOCK_EX);
+
+/**
+ * Restart detection service for a specific machine
+ */
+function restartDetectionService($machine_number) {
+    try {
+        // Find the directory that matches st{machine_number}_*
+        $basePath = "/home/yolo";
+        $searchPattern = "st{$machine_number}_*";
+        $matchingDirs = glob($basePath . "/" . $searchPattern, GLOB_ONLYDIR);
+        
+        if (empty($matchingDirs)) {
+            return [
+                'success' => false,
+                'message' => "Nenalezen žádný adresář odpovídající vzoru 'st{$machine_number}_*'"
+            ];
+        }
+        
+        // Extract the service name from the directory name
+        $foundDir = basename($matchingDirs[0]);
+        $serviceName = "{$foundDir}.service";
+        
+        // Create restart flag file
+        $flagFilePath = "/home/yolo/restart_service.json";
+        
+        // Prepare restart request data
+        $restartRequest = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'machine_number' => $machine_number,
+            'service_name' => $serviceName,
+            'directory_name' => $foundDir,
+            'requested_by' => 'web_interface',
+            'status' => 'pending'
+        ];
+        
+        // Write the restart request to the flag file
+        $json_output = json_encode($restartRequest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $write_result = file_put_contents($flagFilePath, $json_output, LOCK_EX);
+        
+        if ($write_result === false) {
+            return [
+                'success' => false,
+                'message' => "Nepodařilo se vytvořit soubor požadavku na restart: {$flagFilePath}"
+            ];
+        }
+        
+        // Set proper permissions so the monitoring service can read/write
+        chmod($flagFilePath, 0666);
+        
+        return [
+            'success' => true,
+            'message' => "Požadavek na restart služby {$serviceName} byl vytvořen",
+            'service_name' => $serviceName,
+            'found_directory' => $foundDir,
+            'flag_file' => $flagFilePath,
+            'note' => 'Služba bude restartována monitorovací službou'
+        ];
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => "Chyba při vytváření požadavku na restart služby: " . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Check the status of a restart request
+ */
+function checkRestartStatus() {
+    try {
+        $flagFilePath = "/home/yolo/restart_service.json";
+        
+        if (!file_exists($flagFilePath)) {
+            return [
+                'success' => true,
+                'status' => 'none',
+                'message' => 'Žádný požadavek na restart'
+            ];
+        }
+        
+        // Read the restart request file
+        $json_content = file_get_contents($flagFilePath);
+        $restartData = json_decode($json_content, true);
+        
+        if ($restartData === null) {
+            return [
+                'success' => false,
+                'message' => 'Nepodařilo se číst soubor požadavku na restart'
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'status' => $restartData['status'] ?? 'unknown',
+            'timestamp' => $restartData['timestamp'] ?? '',
+            'service_name' => $restartData['service_name'] ?? '',
+            'message' => 'Stav restartu: ' . ($restartData['status'] ?? 'unknown'),
+            'data' => $restartData
+        ];
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => "Chyba při kontrole stavu restartu: " . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Save model selection to configuration file
+ */
+function saveModelSelection($model_path, $machine_number) {
+    try {
+        // Find the directory that matches st{machine_number}_*
+        $basePath = "/home/yolo";
+        $searchPattern = "st{$machine_number}_*";
+        $matchingDirs = glob($basePath . "/" . $searchPattern, GLOB_ONLYDIR);
+        
+        if (empty($matchingDirs)) {
+            return [
+                'success' => false,
+                'message' => "Nenalezen žádný adresář odpovídající vzoru 'st{$machine_number}_*' v {$basePath}"
+            ];
+        }
+        
+        // Use the first matching directory
+        $foundDir = $matchingDirs[0];
+        $config_path = "{$foundDir}/Detekce_Obrazu/config/detekce_ulozeni.json";
+        
+        // Check if config file exists
+        if (!file_exists($config_path)) {
+            return [
+                'success' => false,
+                'message' => "Konfigurační soubor nenalezen: {$config_path}"
+            ];
+        }
+        
+        // Read current configuration
+        $config_content = file_get_contents($config_path);
+        $config = json_decode($config_content, true);
+        
+        if ($config === null) {
+            return [
+                'success' => false,
+                'message' => "Nepodařilo se analyzovat konfigurační soubor"
+            ];
+        }
+        
+        // Extract just the filename from the full path
+        $model_filename = basename($model_path);
+        
+        // Update the weights_name field
+        $config['weights_name'] = $model_filename;
+        
+        // Save back to file with pretty formatting
+        $json_output = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        
+        $write_result = file_put_contents($config_path, $json_output, LOCK_EX);
+        
+        if ($write_result === false) {
+            return [
+                'success' => false,
+                'message' => "Nepodařilo se zapsat do konfiguračního souboru"
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'message' => "Model '{$model_filename}' byl úspěšně vybrán pro stroj {$machine_number}",
+            'model_name' => $model_filename,
+            'config_path' => $config_path,
+            'found_directory' => basename($foundDir)
+        ];
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => "Chyba při ukládání výběru modelu: " . $e->getMessage()
+        ];
+    }
+}
 
 /**
  * Execute detection script command

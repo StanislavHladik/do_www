@@ -26,11 +26,23 @@ else
         <script src="script/jquery-3.7.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
         <link rel="stylesheet" href="../css/style.css">
+        <link rel="stylesheet" href="css/navigation.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <title>Detekce obrazu</title>
     </head>
     <body>   
         <header class="site-header">
-        <h1><?php echo($popisStroj); ?></h1>
-        <p>Pracoviště č. <?php echo($cisloStroj); ?> - <?php echo($nazevStroj); ?></p>      
-    </header>
+            <h1><?php echo($popisStroj); ?></h1>
+            <p>Pracoviště č. <?php echo($cisloStroj); ?> - <?php echo($nazevStroj); ?></p>
+            
+            <!-- Navigation Buttons -->
+            <nav class="navigation-buttons">
+                <a href="nahledy.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
+                    <i class="fa fa-home"></i> Náhledy
+                </a>
+                <a href="models_offer.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
+                    <i class="fa fa-search"></i> Výběr modelů
+                </a>
+            </nav>      
+        </header>
+        <script src="script/navigation.js"></script>

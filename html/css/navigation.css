@@ -1,0 +1,76 @@
+/* Navigation Buttons Styles */
+.navigation-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+    padding: 10px 0;
+    border-top: 1px solid #ddd;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    min-width: 120px;
+    justify-content: center;
+}
+
+.nav-btn:hover {
+    background: linear-gradient(135deg, #0056b3, #003d82);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.nav-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-btn i {
+    font-size: 16px;
+}
+
+/* Active page button style */
+.nav-btn.active {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.nav-btn.active:hover {
+    background: linear-gradient(135deg, #1e7e34, #155724);
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+    .navigation-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .nav-btn {
+        width: 90%;
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-btn {
+        padding: 10px 15px;
+        font-size: 12px;
+        min-width: 100px;
+    }
+    
+    .nav-btn i {
+        font-size: 14px;
+    }
+}
