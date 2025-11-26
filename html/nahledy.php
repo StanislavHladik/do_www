@@ -208,7 +208,7 @@ else
         }
       */
 
-              function updateGallery(images) {
+        function updateGallery(images) {
             console.log('updateGallery');
             const gallery = document.getElementById('gallery');
             gallery.innerHTML = ''; // Clear previous images
@@ -259,7 +259,7 @@ else
 
         // Fetch images every 5 seconds
         setInterval(refresh, 1000); 
-        // setInterval(fetchImages, 4000); // 4000 milliseconds = 4 seconds
+        //setInterval(fetchImages, 1000); // 4000 milliseconds = 4 seconds
         // setInterval(refresh, 1);
         fetchImages(); // Initial load
         //window.onload = takeScreenshot;

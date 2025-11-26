@@ -1,11 +1,18 @@
 <footer class="site-footer">
     <!-- Control Panel -->
     <div class="control-panel" style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px; border-top: 2px solid #ccc;">
-        <h4 style="margin: 0 0 15px 0; color: #333;">Detection Control Panel</h4>
+        <h4 style="margin: 0 0 15px 0; color: #333;">Ovládací panel</h4>
         <div class="button-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="sendDetectionCommand('take_photo')" class="control-btn" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
+                Pořiď snímek
+            </button> 
+            <button onclick="sendDetectionCommand('save_photo')" class="control-btn" style="padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
+                Ulož snímek
+            </button> 
+            <!--        
             <button onclick="sendDetectionCommand('start')" class="control-btn" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
                 ▶ Start Detection
-            </button>
+            </button> 
             <button onclick="sendDetectionCommand('stop')" class="control-btn" style="padding: 8px 16px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
                 ⏹ Stop Detection
             </button>
@@ -15,6 +22,7 @@
             <button onclick="sendDetectionCommand('restart')" class="control-btn" style="padding: 8px 16px; background-color: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
                 🔄 Restart
             </button>
+            -->
         </div>
         <div id="statusDisplay" style="margin-top: 10px; 
                                        padding: 8px; 
@@ -22,7 +30,7 @@
                                        border-radius: 4px; 
                                        font-size: 13px; 
                                        min-height: 20px; 
-                                       border-left: 4px solid #2196F3;
+                                       border-left: 16px solid #2196F3;
                                        color: black;">
             <strong>Status:</strong> <span id="statusText">Ready</span>
         </div>
@@ -57,6 +65,10 @@
                     const statusDisplay = document.getElementById('statusDisplay');
                     if (command === 'start') {
                         statusDisplay.style.borderLeftColor = '#4CAF50';
+                    } else if (command === 'take_photo') {
+                        statusDisplay.style.borderLeftColor = '#4CAF50';
+                    } else if (command === 'save_photo') {
+                        statusDisplay.style.borderLeftColor = '#2196F3';
                     } else if (command === 'stop') {
                         statusDisplay.style.borderLeftColor = '#f44336';
                     } else {
