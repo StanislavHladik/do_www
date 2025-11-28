@@ -91,7 +91,7 @@ function restartDetectionService($machine_number) {
         $serviceName = "{$foundDir}.service";
         
         // Create restart flag file
-        $flagFilePath = "/home/yolo/restart_service.json";
+        $flagFilePath = "/home/yolo/services_configuration/restart_service.json";
         
         // Prepare restart request data
         $restartRequest = [
@@ -139,7 +139,7 @@ function restartDetectionService($machine_number) {
  */
 function checkRestartStatus() {
     try {
-        $flagFilePath = "/home/yolo/restart_service.json";
+        $flagFilePath = "/home/yolo/services_configuration/restart_service.json";
         
         if (!file_exists($flagFilePath)) {
             return [
