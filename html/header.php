@@ -37,11 +37,17 @@ else
             
             <!-- Navigation Buttons -->
             <nav class="navigation-buttons">
+                <a href="index.php" class="nav-btn">
+                    <i class="fa fa-th"></i> Všechny stroje
+                </a>
                 <a href="nahledy.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
                     <i class="fa fa-home"></i> Náhledy
                 </a>
                 <a href="models_offer.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
-                    <i class="fa fa-search"></i> Výběr modelů
+                    <i class="fa fa-cube"></i> Výběr modelů
+                </a>
+                <a href="train.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
+                    <i class="fa fa-graduation-cap"></i> Trénink
                 </a>
             </nav>      
         </header>

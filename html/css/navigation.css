@@ -1,18 +1,19 @@
 /* Navigation Buttons Styles */
 .navigation-buttons {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     justify-content: center;
     margin-top: 20px;
     padding: 10px 0;
     border-top: 1px solid #ddd;
+    flex-wrap: wrap;
 }
 
 .nav-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 12px 18px;
     background: linear-gradient(135deg, #007bff, #0056b3);
     color: white;
     text-decoration: none;
@@ -21,7 +22,7 @@
     font-size: 14px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    min-width: 120px;
+    min-width: 110px;
     justify-content: center;
 }
 
