@@ -56,6 +56,15 @@ if (isset($input['action']) && $input['action'] === 'check_restart_status') {
     exit();
 }
 
+if (isset($input['action']) && $input['action'] === 'get_current_model') {
+    // Get current model selection
+    $machine_number = isset($input['machine_number']) ? htmlspecialchars($input['machine_number']) : '1';
+    
+    $result = getCurrentModel($machine_number);
+    echo json_encode($result);
+    exit();
+}
+
 // Original command handling
 if (!isset($input['command'])) {
     echo json_encode(['success' => false, 'message' => 'Invalid input - command or action required']);
@@ -174,6 +183,109 @@ function checkRestartStatus() {
             'success' => false,
             'message' => "Chyba při kontrole stavu restartu: " . $e->getMessage()
         ];
+    }
+}
+
+/**
+ * Get current model selection from configuration file
+ */
+function getCurrentModel($machine_number) {
+    try {
+        // Find the directory that matches st{machine_number}_*
+        $basePath = "/home/yolo";
+        $searchPattern = "st{$machine_number}_*";
+        $matchingDirs = glob($basePath . "/" . $searchPattern, GLOB_ONLYDIR);
+        
+        if (empty($matchingDirs)) {
+            return [
+                'success' => false,
+                'message' => "Nenalezen žádný adresář odpovídající vzoru 'st{$machine_number}_*' v {$basePath}"
+            ];
+        }
+        
+        // Use the first matching directory
+        $foundDir = $matchingDirs[0];
+        $config_path = "{$foundDir}/Detekce_Obrazu/config/detekce_ulozeni.json";
+        $models_path = "{$foundDir}/Detekce_Obrazu/models";
+        
+        // Check if config file exists
+        if (!file_exists($config_path)) {
+            return [
+                'success' => false,
+                'message' => "Konfigurační soubor nenalezen: {$config_path}"
+            ];
+        }
+        
+        // Read current configuration
+        $config_content = file_get_contents($config_path);
+        $config = json_decode($config_content, true);
+        
+        if ($config === null) {
+            return [
+                'success' => false,
+                'message' => "Nepodařilo se analyzovat konfigurační soubor"
+            ];
+        }
+        
+        // Get the current model name
+        $current_model = isset($config['weights_name']) ? $config['weights_name'] : null;
+        
+        if ($current_model === null) {
+            return [
+                'success' => false,
+                'message' => "V konfiguračním souboru není definován model (weights_name)"
+            ];
+        }
+        
+        // Build full path to the model file
+        $model_full_path = "{$models_path}/{$current_model}";
+        
+        // Check if model file actually exists
+        $model_exists = file_exists($model_full_path);
+        
+        // Get file information if it exists
+        $file_info = [];
+        if ($model_exists) {
+            $file_info = [
+                'size' => filesize($model_full_path),
+                'size_formatted' => formatFileSize(filesize($model_full_path)),
+                'modified' => date("Y-m-d H:i:s", filemtime($model_full_path)),
+                'modified_timestamp' => filemtime($model_full_path)
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'model_name' => $current_model,
+            'model_path' => $model_full_path,
+            'model_exists' => $model_exists,
+            'config_path' => $config_path,
+            'models_directory' => $models_path,
+            'found_directory' => basename($foundDir),
+            'machine_number' => $machine_number,
+            'file_info' => $file_info
+        ];
+        
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => "Chyba při čtení aktuálního modelu: " . $e->getMessage()
+        ];
+    }
+}
+
+/**
+ * Format file size in human-readable format
+ */
+function formatFileSize($bytes) {
+    if ($bytes >= 1073741824) {
+        return number_format($bytes / 1073741824, 2) . ' GB';
+    } elseif ($bytes >= 1048576) {
+        return number_format($bytes / 1048576, 2) . ' MB';
+    } elseif ($bytes >= 1024) {
+        return number_format($bytes / 1024, 2) . ' KB';
+    } else {
+        return $bytes . ' bytes';
     }
 }
 

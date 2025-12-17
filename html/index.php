@@ -9,8 +9,8 @@
         <title>Detekce obrazu - Výběr stroje</title>
     </head>
     <body>   
-        <header class="page-header">
-            <h1><i class="fa fa-industry"></i> Systém Detekce Obrazu</h1>
+        <header class="site-header">
+            <h1>Systém Detekce Obrazu</h1>
             <p>Vyberte pracovní stanici</p>
         </header>
         
@@ -62,7 +62,7 @@
                 // Display Production Machines
                 if (!empty($productionMachines)) {
                     echo '<div class="section-header">';
-                    echo '<h2><i class="fa fa-industry"></i> Produkční Stroje</h2>';
+                    echo '<h2>Produkční Stroje</h2>';
                     echo '<p>Aktivní pracovní stanice pro detekci obrazu</p>';
                     echo '</div>';
                     echo '<div class="machine-grid">';
@@ -71,6 +71,10 @@
                         $cisloStroj = $machine['number'];
                         $nazevStroj = str_replace('_', ' ', $machine['name']);
                         $popisStroj = "Pracovní stanice " . $machine['name'];
+                        $nahledyUrl = "nahledy.php?cisloStroj=" . urlencode($cisloStroj) . 
+                                      "&nazevStroj=" . urlencode($nazevStroj) . 
+                                      "&popisStroj=" . urlencode($popisStroj);
+
 
                         echo '<div style="cursor: pointer;" onclick="window.location=\'' . $nahledyUrl . '\';" class="machine-card">';
                         echo '<div class="machine-header">';
@@ -94,9 +98,6 @@
                         echo '<div class="machine-actions">';
                         
                         // Náhledy button
-                        $nahledyUrl = "nahledy.php?cisloStroj=" . urlencode($cisloStroj) . 
-                                     "&nazevStroj=" . urlencode($nazevStroj) . 
-                                     "&popisStroj=" . urlencode($popisStroj);
                         echo '<a href="' . $nahledyUrl . '" class="machine-btn btn-primary">';
                         echo '<i class="fa fa-image"></i> Náhledy';
                         echo '</a>';
@@ -119,7 +120,7 @@
                 // Display Special Machines
                 if (!empty($specialMachines)) {
                     echo '<div class="section-header special-section">';
-                    echo '<h2><i class="fa fa-flask"></i> Speciální Pracovní Prostory</h2>';
+                    echo '<h2>Speciální Pracovní Prostory</h2>';
                     echo '<p>Vývojové a testovací prostředí</p>';
                     echo '</div>';
                     echo '<div class="machine-grid">';

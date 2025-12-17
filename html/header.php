@@ -46,9 +46,6 @@ else
                 <a href="models_offer.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
                     <i class="fa fa-cube"></i> Výběr modelů
                 </a>
-                <a href="train.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
-                    <i class="fa fa-graduation-cap"></i> Trénink
-                </a>
             </nav>      
         </header>
         <script src="script/navigation.js"></script>

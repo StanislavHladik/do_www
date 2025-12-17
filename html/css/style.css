@@ -309,6 +309,17 @@ footer {
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
+/* Active Model Styling */
+.model-card.active-model {
+    border: 2px solid #28a745;
+    background: #f0f9f4;
+}
+
+.model-card.active-model:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.3);
+}
+
 .model-header h3, .card-header h3 {
     color: #007bff;
     margin: 0 0 15px 0;
@@ -413,6 +424,26 @@ footer {
 
 .modal-body {
     padding: 20px;
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 12px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-success i {
+    margin-right: 4px;
 }
 
 /* Responsive */
