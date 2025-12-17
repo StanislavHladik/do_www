@@ -25,6 +25,63 @@
     border-left: 4px solid #007bff;
 }
 
+/* Dataset Upload Section */
+.upload-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #007bff;
+}
+
+.upload-section h3 {
+    margin-top: 0;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-section p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.upload-section .form-control[type="file"] {
+    padding: 10px;
+    border: 2px dashed #007bff;
+    background: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-section .form-control[type="file"]:hover {
+    border-color: #0056b3;
+    background: #e7f3ff;
+}
+
+.upload-status {
+    margin-top: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upload-status .progress-bar-container {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
 /* Datasets Section */
 .datasets-section {
     margin: 30px 0;

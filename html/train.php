@@ -108,6 +108,40 @@
         }
         ?>
         
+        <!-- Dataset Upload Section -->
+        <div class="upload-section">
+            <h3><i class="fa fa-upload"></i> Nahrát Nový Dataset</h3>
+            <p>Nahrajte .zip soubor s datasetem do adresáře pro trénink.</p>
+            
+            <form id="dataset-upload-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="dataset-file"><i class="fa fa-file-archive-o"></i> Vyberte .zip soubor:</label>
+                    <input type="file" id="dataset-file" name="dataset-file" accept=".zip" class="form-control" required>
+                    <small>Podporované formáty: .zip (maximální velikost: 500 MB)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dataset-upload-name"><i class="fa fa-tag"></i> Název datasetu (volitelné):</label>
+                    <input type="text" id="dataset-upload-name" name="dataset-upload-name" class="form-control" placeholder="Ponechte prázdné pro použití názvu souboru">
+                    <small>Pokud nevyplníte, použije se název nahraného souboru</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-upload"></i> Nahrát Dataset
+                </button>
+            </form>
+            
+            <div id="upload-status" class="upload-status" style="display: none;">
+                <div class="alert">
+                    <i class="fa fa-info-circle"></i>
+                    <span id="upload-status-text"></span>
+                </div>
+                <div id="upload-progress-container" class="progress-bar-container" style="display: none;">
+                    <div id="upload-progress-bar" class="progress-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Training Configuration Panel -->
         <div class="training-config-panel">
             <h3><i class="fa fa-sliders"></i> Konfigurace Tréninku</h3>
@@ -172,6 +206,117 @@
 </main>
 
 <script>
+    // Handle dataset upload form submission
+    document.getElementById('dataset-upload-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('dataset-file');
+        const datasetName = document.getElementById('dataset-upload-name').value;
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('Prosím vyberte soubor k nahrání');
+            return;
+        }
+        
+        // Check file size (500 MB limit)
+        const maxSize = 500 * 1024 * 1024; // 500 MB in bytes
+        if (file.size > maxSize) {
+            alert('Soubor je příliš velký. Maximální velikost je 500 MB.');
+            return;
+        }
+        
+        // Check file extension
+        if (!file.name.endsWith('.zip')) {
+            alert('Pouze .zip soubory jsou podporovány');
+            return;
+        }
+        
+        uploadDataset(file, datasetName);
+    });
+    
+    function uploadDataset(file, customName) {
+        const formData = new FormData();
+        formData.append('dataset_file', file);
+        formData.append('dataset_name', customName);
+        formData.append('machine_number', '<?php echo($cisloStroj); ?>');
+        
+        const statusDiv = document.getElementById('upload-status');
+        const statusText = document.getElementById('upload-status-text');
+        const progressContainer = document.getElementById('upload-progress-container');
+        const progressBar = document.getElementById('upload-progress-bar');
+        
+        // Show status
+        statusDiv.style.display = 'block';
+        progressContainer.style.display = 'block';
+        statusText.textContent = 'Nahrávání datasetu...';
+        statusDiv.querySelector('.alert').className = 'alert alert-info';
+        statusDiv.querySelector('.fa').className = 'fa fa-spinner fa-spin';
+        
+        // Create XMLHttpRequest for progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        // Track upload progress
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percentComplete + '%';
+                progressBar.textContent = percentComplete + '%';
+                statusText.textContent = `Nahrávání datasetu... ${percentComplete}%`;
+            }
+        });
+        
+        // Handle completion
+        xhr.addEventListener('load', function() {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    
+                    if (response.success) {
+                        statusText.textContent = response.message;
+                        statusDiv.querySelector('.alert').className = 'alert alert-success';
+                        statusDiv.querySelector('.fa').className = 'fa fa-check-circle';
+                        
+                        // Reset form
+                        document.getElementById('dataset-upload-form').reset();
+                        
+                        // Reload page after 2 seconds to show new dataset
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        statusText.textContent = 'Chyba: ' + response.message;
+                        statusDiv.querySelector('.alert').className = 'alert alert-danger';
+                        statusDiv.querySelector('.fa').className = 'fa fa-exclamation-triangle';
+                        progressContainer.style.display = 'none';
+                    }
+                } catch (e) {
+                    statusText.textContent = 'Chyba při zpracování odpovědi serveru';
+                    statusDiv.querySelector('.alert').className = 'alert alert-danger';
+                    statusDiv.querySelector('.fa').className = 'fa fa-exclamation-triangle';
+                    progressContainer.style.display = 'none';
+                }
+            } else {
+                statusText.textContent = 'Chyba sítě: ' + xhr.status;
+                statusDiv.querySelector('.alert').className = 'alert alert-danger';
+                statusDiv.querySelector('.fa').className = 'fa fa-exclamation-triangle';
+                progressContainer.style.display = 'none';
+            }
+        });
+        
+        // Handle errors
+        xhr.addEventListener('error', function() {
+            statusText.textContent = 'Chyba při nahrávání souboru';
+            statusDiv.querySelector('.alert').className = 'alert alert-danger';
+            statusDiv.querySelector('.fa').className = 'fa fa-exclamation-triangle';
+            progressContainer.style.display = 'none';
+        });
+        
+        // Send request
+        xhr.open('POST', 'upload_dataset.php', true);
+        xhr.send(formData);
+    }
+
     function startTraining(datasetName, datasetPath) {
         // Get configuration values
         const epochs = document.getElementById('epochs').value;
