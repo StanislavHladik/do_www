@@ -1,14 +1,38 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't display errors in JSON response
+ini_set('log_errors', 1);
+ini_set('error_log', '/tmp/upload_dataset_errors.log');
+
 header('Content-Type: application/json');
 
-// Check if request is POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-    exit();
-}
+// Catch any fatal errors
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        error_log("Fatal error in upload_dataset.php: " . print_r($error, true));
+        if (!headers_sent()) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Interní chyba serveru: ' . $error['message'],
+                'error_file' => basename($error['file']),
+                'error_line' => $error['line']
+            ]);
+        }
+    }
+});
 
-// Check if file was uploaded
+try {
+    // Check if request is POST
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        exit();
+    }
+
+    // Check if file was uploaded
 if (!isset($_FILES['dataset_file']) || $_FILES['dataset_file']['error'] !== UPLOAD_ERR_OK) {
     $error_message = 'No file uploaded';
     if (isset($_FILES['dataset_file']['error'])) {
@@ -103,9 +127,11 @@ if (!is_writable($base_path)) {
 }
 
 // Create target directory for the dataset
-$target_dir = $base_path . '/' . $dataset_name;
+// $target_dir = $base_path . '/' . $dataset_name;
+$target_dir = $base_path;
 
 // Check if dataset already exists
+/*
 if (is_dir($target_dir)) {
     echo json_encode([
         'success' => false, 
@@ -113,8 +139,10 @@ if (is_dir($target_dir)) {
     ]);
     exit();
 }
+*/
 
 // Create the target directory
+/*
 if (!mkdir($target_dir, 0755, true)) {
     echo json_encode([
         'success' => false, 
@@ -122,6 +150,7 @@ if (!mkdir($target_dir, 0755, true)) {
     ]);
     exit();
 }
+*/
 
 // Move uploaded file to target directory
 $zip_path = $target_dir . '/' . $original_filename;
@@ -136,6 +165,7 @@ if (!move_uploaded_file($temp_path, $zip_path)) {
 }
 
 // Try to extract the zip file
+/*
 $zip = new ZipArchive();
 $extract_result = $zip->open($zip_path);
 
@@ -165,10 +195,50 @@ if ($extract_result === TRUE) {
         'warning' => 'Extraction failed - ZIP file preserved'
     ]);
 }
+*/
 
-// Log the upload
-$log_entry = date('Y-m-d H:i:s') . " - Dataset uploaded: {$dataset_name} ({$file_size} bytes) to {$target_dir}\n";
-file_put_contents('/tmp/dataset_uploads.log', $log_entry, FILE_APPEND | LOCK_EX);
+    // Update unzip.json configuration file with the new zip path
+    $unzip_config_path = "/home/yolo/st99_trenink/Detekce_Obrazu/utils/unzip.json";
+    $unzip_config = [
+        'zip_path' => $zip_path
+    ];
+    
+    $json_output = json_encode($unzip_config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    $config_write_result = file_put_contents($unzip_config_path, $json_output, LOCK_EX);
+    
+    if ($config_write_result === false) {
+        error_log("Warning: Could not update unzip.json at {$unzip_config_path}");
+    }
+
+    // Log the upload
+    $log_entry = date('Y-m-d H:i:s') . " - Dataset uploaded: {$dataset_name} ({$file_size} bytes) to {$zip_path}\n";
+    file_put_contents('/tmp/dataset_uploads.log', $log_entry, FILE_APPEND | LOCK_EX);
+
+    // Send success response
+    echo json_encode([
+        'success' => true,
+        'message' => "Soubor '{$original_filename}' byl úspěšně nahrán a cesta byla aktualizována v unzip.json",
+        'dataset_name' => $dataset_name,
+        'target_path' => $target_dir,
+        'file_size' => formatFileSize($file_size),
+        'file_path' => $zip_path,
+        'config_updated' => $config_write_result !== false
+    ]);
+
+} catch (Exception $e) {
+    // Log the exception
+    error_log("Exception in upload_dataset.php: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+    
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Chyba serveru: ' . $e->getMessage(),
+        'error_type' => get_class($e),
+        'error_line' => $e->getLine(),
+        'error_file' => basename($e->getFile())
+    ]);
+    exit();
+}
 
 /**
  * Format file size in human-readable format

@@ -107,40 +107,9 @@
             }
         }
         ?>
-        
+
         <!-- Dataset Upload Section -->
-        <div class="upload-section">
-            <h3><i class="fa fa-upload"></i> Nahrát Nový Dataset</h3>
-            <p>Nahrajte .zip soubor s datasetem do adresáře pro trénink.</p>
-            
-            <form id="dataset-upload-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="dataset-file"><i class="fa fa-file-archive-o"></i> Vyberte .zip soubor:</label>
-                    <input type="file" id="dataset-file" name="dataset-file" accept=".zip" class="form-control" required>
-                    <small>Podporované formáty: .zip (maximální velikost: 500 MB)</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="dataset-upload-name"><i class="fa fa-tag"></i> Název datasetu (volitelné):</label>
-                    <input type="text" id="dataset-upload-name" name="dataset-upload-name" class="form-control" placeholder="Ponechte prázdné pro použití názvu souboru">
-                    <small>Pokud nevyplníte, použije se název nahraného souboru</small>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-upload"></i> Nahrát Dataset
-                </button>
-            </form>
-            
-            <div id="upload-status" class="upload-status" style="display: none;">
-                <div class="alert">
-                    <i class="fa fa-info-circle"></i>
-                    <span id="upload-status-text"></span>
-                </div>
-                <div id="upload-progress-container" class="progress-bar-container" style="display: none;">
-                    <div id="upload-progress-bar" class="progress-bar" style="width: 0%">0%</div>
-                </div>
-            </div>
-        </div>
+        <?php include 'views/upload_section.php'; ?>
         
         <!-- Training Configuration Panel -->
         <div class="training-config-panel">
@@ -297,10 +266,34 @@
                     progressContainer.style.display = 'none';
                 }
             } else {
-                statusText.textContent = 'Chyba sítě: ' + xhr.status;
+                // Try to parse error response for more details
+                let errorMsg = 'Chyba sítě: ' + xhr.status;
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.message) {
+                        errorMsg = 'Chyba ' + xhr.status + ': ' + response.message;
+                        if (response.error_line) {
+                            errorMsg += ' (řádek ' + response.error_line + ')';
+                        }
+                    }
+                } catch (e) {
+                    // If response is not JSON, show raw text (truncated)
+                    if (xhr.responseText && xhr.responseText.length > 0) {
+                        errorMsg += ' - ' + xhr.responseText.substring(0, 200);
+                    }
+                }
+                
+                statusText.textContent = errorMsg;
                 statusDiv.querySelector('.alert').className = 'alert alert-danger';
                 statusDiv.querySelector('.fa').className = 'fa fa-exclamation-triangle';
                 progressContainer.style.display = 'none';
+                
+                // Log full error to console for debugging
+                console.error('Upload error details:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    response: xhr.responseText
+                });
             }
         });
         
