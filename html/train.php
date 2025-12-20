@@ -92,8 +92,9 @@
                     echo '</div>';
                     
                     echo '<div class="dataset-actions">';
-                    echo '<button class="btn btn-success" onclick="startTraining(\'' . htmlspecialchars($datasetName) . '\', \'' . htmlspecialchars($datasetDir) . '\')">';
-                    echo '<i class="fa fa-play"></i> Zahájit Trénink';
+                    
+                    echo '<button class="btn btn-primary" onclick="chooseDataset(\'' . htmlspecialchars($datasetName) . '\', \'' . htmlspecialchars($datasetDir) . '\')">';
+                    echo '<i class="fa fa-cog"></i> Konfigurovat';
                     echo '</button>';
                     
                     echo '<button class="btn btn-info" onclick="showDatasetInfo(\'' . htmlspecialchars($datasetName) . '\')">';
@@ -113,10 +114,17 @@
         <!-- Dataset Upload Section -->
         <?php include 'views/upload_section.php'; ?>
         
-        <!-- Training Configuration Panel -->
-        <?php include 'views/train_configuration_section.php'; ?>
-
-        <?php includeWithVariables('views/train_configuration_section.php', array('test' => 'Ahoj')); ?>
+        <!-- Training Configuration Panel (reloadable) -->
+        <div id="train-config-container">
+            <?php 
+            includeWithVariables('views/train_configuration_section.php', [
+                'datasetName' => '',
+                'datasetPath' => '',
+                'cisloStroj' => $cisloStroj,
+                'selectedDataset' => ''
+            ]); 
+            ?>
+        </div>
 
         <!-- Training Progress (hidden by default) -->
         <div id="training-progress" class="training-progress-panel" style="display: none;">
@@ -302,7 +310,54 @@
         // Simulate training progress (replace with actual implementation)
         simulateTraining();
     }
-    
+
+    function chooseDataset(datasetName, datasetPath) {
+        // Load the training configuration section with selected dataset parameters
+        const formData = new FormData();
+        formData.append('dataset_name', datasetName);
+        formData.append('dataset_path', datasetPath);
+        formData.append('cislo_stroj', '<?php echo($cisloStroj); ?>');
+        
+        // Show loading indicator
+        const container = document.getElementById('train-config-container');
+        const originalContent = container.innerHTML;
+        container.innerHTML = '<div class="alert alert-info"><i class="fa fa-spinner fa-spin"></i> Načítání konfigurace...</div>';
+        
+        fetch('load_train_config.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Update the container with new content
+            container.innerHTML = html;
+            
+            // Scroll to the configuration section
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Show success message temporarily
+            const successMsg = document.createElement('div');
+            successMsg.className = 'alert alert-success';
+            successMsg.innerHTML = '<i class="fa fa-check-circle"></i> Dataset "' + datasetName + '" byl vybrán pro konfiguraci';
+            successMsg.style.marginBottom = '15px';
+            container.insertBefore(successMsg, container.firstChild);
+            
+            setTimeout(() => {
+                successMsg.remove();
+            }, 3000);
+        })
+        .catch(error => {
+            console.error('Error loading configuration:', error);
+            container.innerHTML = originalContent;
+            alert('Chyba při načítání konfigurace: ' + error.message);
+        });
+    }
+
     function stopTraining() {
         if (confirm('Opravdu chcete zastavit trénink?')) {
             // TODO: Implement training stop via AJAX
