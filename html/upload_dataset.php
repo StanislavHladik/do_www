@@ -1,9 +1,9 @@
 <?php
 // Enable error reporting for debugging
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Don't display errors in JSON response
+ini_set('display_errors', 1); // Don't display errors in JSON response
 ini_set('log_errors', 1);
-ini_set('error_log', '/tmp/upload_dataset_errors.log');
+ini_set('error_log', '/www/html/upload_dataset_errors.log');
 
 header('Content-Type: application/json');
 
@@ -210,6 +210,26 @@ if ($extract_result === TRUE) {
         error_log("Warning: Could not update unzip.json at {$unzip_config_path}");
     }
 
+    // Run unzip.py script using the virtual environment
+    $venv_python = "/home/yolo/st99_trenink/Detekce_Obrazu_venv/bin/python";
+    $unzip_script = "/home/yolo/st99_trenink/Detekce_Obrazu/utils/unzip.py";
+    $detekce_dir = "/home/yolo/st99_trenink/Detekce_Obrazu";
+    
+    // Build the command to run the script
+    $command = sprintf(
+        "cd %s && %s %s > /tmp/unzip_output.log 2>&1 &",
+        escapeshellarg($detekce_dir),
+        escapeshellarg($venv_python),
+        escapeshellarg($unzip_script)
+    );
+    
+    // Execute the command in the background
+    $exec_output = shell_exec($command);
+    
+    // Log the execution
+    $exec_log = date('Y-m-d H:i:s') . " - Executed unzip.py for {$zip_path}\n";
+    file_put_contents('/tmp/dataset_uploads.log', $exec_log, FILE_APPEND | LOCK_EX);
+
     // Log the upload
     $log_entry = date('Y-m-d H:i:s') . " - Dataset uploaded: {$dataset_name} ({$file_size} bytes) to {$zip_path}\n";
     file_put_contents('/tmp/dataset_uploads.log', $log_entry, FILE_APPEND | LOCK_EX);
@@ -217,12 +237,14 @@ if ($extract_result === TRUE) {
     // Send success response
     echo json_encode([
         'success' => true,
-        'message' => "Soubor '{$original_filename}' byl úspěšně nahrán a cesta byla aktualizována v unzip.json",
+        'message' => "Soubor '{$original_filename}' byl úspěšně nahrán, cesta byla aktualizována v unzip.json a rozbalování bylo zahájeno",
         'dataset_name' => $dataset_name,
         'target_path' => $target_dir,
         'file_size' => formatFileSize($file_size),
         'file_path' => $zip_path,
-        'config_updated' => $config_write_result !== false
+        'config_updated' => $config_write_result !== false,
+        'unzip_started' => true,
+        'unzip_log' => '/tmp/unzip_output.log'
     ]);
 
 } catch (Exception $e) {
