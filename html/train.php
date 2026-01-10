@@ -279,38 +279,6 @@
         xhr.send(formData);
     }
 
-    function startTraining(datasetName, datasetPath) {
-        // Get configuration values
-        const epochs = document.getElementById('epochs').value;
-        const batchSize = document.getElementById('batch-size').value;
-        const imgSize = document.getElementById('img-size').value;
-        const modelType = document.getElementById('model-type').value;
-        const modelName = document.getElementById('model-name').value;
-        
-        // Show confirmation
-        if (!confirm(`Zahájit trénink modelu?\n\nDataset: ${datasetName}\nEpochy: ${epochs}\nBatch: ${batchSize}\nVelikost: ${imgSize}x${imgSize}`)) {
-            return;
-        }
-        
-        // Show progress panel
-        document.getElementById('training-progress').style.display = 'block';
-        document.getElementById('training-status').innerHTML = '<p><i class="fa fa-spinner fa-spin"></i> Trénink probíhá...</p>';
-        
-        // TODO: Implement actual training call via AJAX
-        console.log('Starting training with:', {
-            dataset: datasetName,
-            path: datasetPath,
-            epochs: epochs,
-            batchSize: batchSize,
-            imgSize: imgSize,
-            modelType: modelType,
-            modelName: modelName
-        });
-        
-        // Simulate training progress (replace with actual implementation)
-        simulateTraining();
-    }
-
     function chooseDataset(datasetName, datasetPath) {
         // Load the training configuration section with selected dataset parameters
         const formData = new FormData();
@@ -337,6 +305,9 @@
             // Update the container with new content
             container.innerHTML = html;
             
+            // Attach form submit handler to the newly loaded form
+            attachTrainingFormHandler();
+            
             // Scroll to the configuration section
             container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             
@@ -357,6 +328,134 @@
             alert('Chyba při načítání konfigurace: ' + error.message);
         });
     }
+    
+    // Attach training form submit handler
+    function attachTrainingFormHandler() {
+        const form = document.getElementById('training-config-form');
+        if (!form) return;
+        
+        // Remove any existing event listeners
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        newForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const datasetName = document.getElementById('selected-dataset-name').value;
+            const datasetPath = document.getElementById('selected-dataset-path').value;
+            const epochs = document.getElementById('epochs').value;
+            const batchSize = document.getElementById('batch-size').value;
+            const imgSize = document.getElementById('img-size').value;
+            const modelType = document.getElementById('model-type').value;
+            const modelName = document.getElementById('model-name').value;
+            
+            // Validate dataset is selected
+            if (!datasetName || !datasetPath) {
+                alert('Prosím nejprve vyberte dataset pomocí tlačítka "Konfigurovat"');
+                return;
+            }
+            
+            // Show confirmation dialog
+            const confirmMsg = `Zahájit trénink modelu?\n\n` +
+                `Dataset: ${datasetName}\n` +
+                `Epochy: ${epochs}\n` +
+                `Batch Size: ${batchSize}\n` +
+                `Velikost obrázku: ${imgSize}x${imgSize}\n` +
+                `Model: ${modelType}\n` +
+                `Název výstupu: ${modelName}`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('dataset_name', datasetName);
+            formData.append('dataset_path', datasetPath);
+            formData.append('epochs', epochs);
+            formData.append('batch_size', batchSize);
+            formData.append('img_size', imgSize);
+            formData.append('model_type', modelType);
+            formData.append('model_name', modelName);
+            formData.append('machine_number', '<?php echo($cisloStroj); ?>');
+            
+            // Show progress panel immediately
+            document.getElementById('training-progress').style.display = 'block';
+            document.getElementById('training-status').innerHTML = '<p><i class="fa fa-spinner fa-spin"></i> Inicializace tréninku...</p>';
+            
+            // Disable submit button to prevent double submission
+            const submitBtn = newForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Zahajování...';
+            
+            // Send request to start training
+            fetch('start_training.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    document.getElementById('training-status').innerHTML = 
+                        '<p><i class="fa fa-check-circle" style="color: #28a745;"></i> ' + data.message + '</p>';
+                    
+                    // Update training log
+                    const log = document.getElementById('training-log');
+                    log.innerHTML = '<p><strong>Trénink zahájen úspěšně!</strong></p>' +
+                        '<p>Konfigurační soubor: <code>' + data.config_file + '</code></p>' +
+                        '<p>Log soubor: <code>' + data.training_log + '</code></p>' +
+                        '<p>Parametry:</p>' +
+                        '<pre>' + JSON.stringify(data.config, null, 2) + '</pre>' +
+                        '<p><em>Trénink probíhá na pozadí. Log můžete sledovat v souboru výše.</em></p>';
+                    
+                    // Show message about monitoring
+                    alert('Trénink byl úspěšně zahájen!\n\nTrénink probíhá na pozadí. ' +
+                        'Výsledky můžete sledovat v log souboru:\n' + data.training_log);
+                    
+                    // Re-enable button with different text
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa fa-check"></i> Trénink spuštěn';
+                    
+                } else {
+                    // Show error
+                    document.getElementById('training-status').innerHTML = 
+                        '<p><i class="fa fa-exclamation-triangle" style="color: #dc3545;"></i> Chyba při zahájení tréninku</p>';
+                    
+                    const log = document.getElementById('training-log');
+                    log.innerHTML = '<p><strong style="color: #dc3545;">Chyba:</strong> ' + data.message + '</p>' +
+                        (data.log_file ? '<p>Pro více informací viz: <code>' + data.log_file + '</code></p>' : '');
+                    
+                    alert('Chyba při zahájení tréninku:\n' + data.message);
+                    
+                    // Re-enable button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa fa-upload"></i> Zahájit Trénink';
+                }
+            })
+            .catch(error => {
+                console.error('Training error:', error);
+                
+                document.getElementById('training-status').innerHTML = 
+                    '<p><i class="fa fa-exclamation-triangle" style="color: #dc3545;"></i> Chyba sítě</p>';
+                
+                const log = document.getElementById('training-log');
+                log.innerHTML = '<p><strong style="color: #dc3545;">Chyba sítě:</strong> ' + error.message + '</p>';
+                
+                alert('Chyba při komunikaci se serverem:\n' + error.message);
+                
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-upload"></i> Zahájit Trénink';
+            });
+        });
+    }
+    
+    // Attach handler on page load for the initial form
+    document.addEventListener('DOMContentLoaded', function() {
+        attachTrainingFormHandler();
+    });
 
     function stopTraining() {
         if (confirm('Opravdu chcete zastavit trénink?')) {
@@ -369,28 +468,6 @@
     function showDatasetInfo(datasetName) {
         alert(`Detaily datasetu: ${datasetName}\n\nTato funkce bude implementována.`);
         // TODO: Show detailed dataset information in modal
-    }
-    
-    // Simulation function (replace with actual implementation)
-    function simulateTraining() {
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 1;
-            if (progress > 100) {
-                clearInterval(interval);
-                document.getElementById('training-status').innerHTML = '<p><i class="fa fa-check-circle" style="color: #28a745;"></i> Trénink dokončen</p>';
-                return;
-            }
-            
-            document.getElementById('progress-bar').style.width = progress + '%';
-            document.getElementById('progress-bar').textContent = progress + '%';
-            
-            // Add log message
-            const log = document.getElementById('training-log');
-            const message = `Epoch ${Math.floor(progress/10)}/10 - Progress: ${progress}%`;
-            log.innerHTML += `<p>${message}</p>`;
-            log.scrollTop = log.scrollHeight;
-        }, 200);
     }
 </script>
 
