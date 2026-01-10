@@ -94,7 +94,7 @@
                             document.getElementById('statusText').innerText = `Chyba při ukládání: ${error.message}`;
                             document.getElementById('statusDisplay').style.borderLeftColor = '#f44336';
                         });
-                    }, 500); // Wait 500ms between commands
+                    }, 2000); // Wait 2000ms (2 seconds) between commands
                 } else {
                     document.getElementById('statusText').innerText = `Chyba při pořízení: ${data.message}`;
                     document.getElementById('statusDisplay').style.borderLeftColor = '#f44336';
