@@ -8,7 +8,10 @@
             </button> 
             <button onclick="sendDetectionCommand('save_photo')" class="control-btn" style="padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
                 Ulož snímek
-            </button> 
+            </button>
+            <button onclick="sendCombinedCommand()" class="control-btn" style="padding: 8px 16px; background-color: #FF6F00; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
+                Pořiď a Ulož
+            </button>
             <!--        
             <button onclick="sendDetectionCommand('start')" class="control-btn" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
                 ▶ Start Detection
@@ -37,6 +40,73 @@
     </div>
 
     <script>
+        function sendCombinedCommand() {
+            console.log('Sending combined command: take_photo + save_photo');
+            // Update status immediately
+            document.getElementById('statusText').innerText = 'Pořizování a ukládání snímku...';
+            document.getElementById('statusDisplay').style.borderLeftColor = '#FF6F00';
+            
+            // Get machine number if available (from PHP variables)
+            const cisloStroj = typeof window.cisloStroj !== 'undefined' ? window.cisloStroj : '1';
+            
+            // First, send take_photo command
+            fetch('detection_api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    command: 'take_photo',
+                    cisloStroj: cisloStroj,
+                    timestamp: Date.now()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('statusText').innerText = 'Snímek pořízen, ukládání...';
+                    
+                    // Wait a moment for the photo to be taken, then send save_photo
+                    setTimeout(() => {
+                        fetch('detection_api.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                command: 'save_photo',
+                                cisloStroj: cisloStroj,
+                                timestamp: Date.now()
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.getElementById('statusText').innerText = 'Snímek pořízen a uložen úspěšně!';
+                                document.getElementById('statusDisplay').style.borderLeftColor = '#4CAF50';
+                            } else {
+                                document.getElementById('statusText').innerText = `Chyba při ukládání: ${data.message}`;
+                                document.getElementById('statusDisplay').style.borderLeftColor = '#f44336';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error saving photo:', error);
+                            document.getElementById('statusText').innerText = `Chyba při ukládání: ${error.message}`;
+                            document.getElementById('statusDisplay').style.borderLeftColor = '#f44336';
+                        });
+                    }, 500); // Wait 500ms between commands
+                } else {
+                    document.getElementById('statusText').innerText = `Chyba při pořízení: ${data.message}`;
+                    document.getElementById('statusDisplay').style.borderLeftColor = '#f44336';
+                }
+            })
+            .catch(error => {
+                console.error('Error taking photo:', error);
+                document.getElementById('statusText').innerText = `Chyba připojení: ${error.message}`;
+                document.getElementById('statusDisplay').style.borderLeftColor = '#f44336';
+            });
+        }
+
         function sendDetectionCommand(command) {
             console.log(`Sending command: ${command}`);
             // Update status immediately
