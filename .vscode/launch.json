@@ -1,0 +1,43 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Listen for Xdebug (PHP API)",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "pathMappings": {
+                "/var/www/html": "${workspaceFolder}/html"
+            },
+            "log": true,
+            "xdebugSettings": {
+                "max_data": 65535,
+                "show_hidden": 1,
+                "max_children": 100,
+                "max_depth": 5
+            }
+        },
+        {
+            "name": "Listen for Xdebug (Port 9000 - Legacy)",
+            "type": "php",
+            "request": "launch",
+            "port": 9000,
+            "pathMappings": {
+                "/var/www/html": "${workspaceFolder}/html"
+            },
+            "log": true
+        },
+        {
+            "name": "Launch & Debug detection_api.php",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceFolder}/html/detection_api.php",
+            "cwd": "${workspaceFolder}/html",
+            "port": 9003,
+            "runtimeArgs": [
+                "-dxdebug.mode=debug",
+                "-dxdebug.start_with_request=yes"
+            ]
+        }
+    ]
+}

@@ -11,11 +11,22 @@
 header('Content-Type: application/json; charset=utf-8');
 
 // Log file for debugging
-$log_file = '/tmp/start_training.log';
+$log_file = '/home/yolo/st99_trenink/Detekce_Obrazu/log/start_training.log';
 
 function logMessage($message) {
     global $log_file;
     $timestamp = date('Y-m-d H:i:s');
+    
+    // Ensure log file exists and is writable
+    if (!file_exists($log_file)) {
+        $dir = dirname($log_file);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        touch($log_file);
+        chmod($log_file, 0666); // Make it writable by web server
+    }
+    
     file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND);
 }
 
@@ -115,20 +126,22 @@ try {
     // Build command to run Python script in virtual environment
     // Use nohup and redirect to background so it doesn't block the web request
     $python_bin = $venv_path . '/bin/python3';
+    $activate_script = $venv_path . '/bin/activate';
     
     if (!file_exists($python_bin)) {
         throw new Exception("Python binary not found in venv: $python_bin");
     }
     
     // Create a log file for training output
-    $training_log = "/tmp/training_output_" . date('Y-m-d_H-i-s') . ".log";
+    $training_log = "/home/yolo/st99_trenink/Detekce_Obrazu/log/training_output_" . date('Y-m-d_H-i-s') . ".log";
     
     // Build the command
     // Use nohup to prevent termination when HTTP connection closes
     // Redirect stdout and stderr to log file
     // Run in background with &
     $command = sprintf(
-        'cd %s && nohup %s %s > %s 2>&1 &',
+        'source %s && cd %s && nohup %s %s > %s 2>&1 &',
+        escapeshellarg($activate_script),
         escapeshellarg($training_base),
         escapeshellarg($python_bin),
         escapeshellarg($python_script),

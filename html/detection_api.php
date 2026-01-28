@@ -143,9 +143,9 @@ function restartDetectionService($machine_number) {
     }
 }
 
-/**
- * Check the status of a restart request
- */
+//-------------------------------------------------------------------------------------------------------
+// Check the status of a restart request
+//-------------------------------------------------------------------------------------------------------
 function checkRestartStatus() {
     try {
         $flagFilePath = "/home/yolo/services_configuration/restart_service.json";
@@ -185,10 +185,11 @@ function checkRestartStatus() {
         ];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Get current model selection from configuration file
- */
+//-------------------------------------------------------------------------------------------------------
+// Get current model selection from configuration file
+//-------------------------------------------------------------------------------------------------------
 function getCurrentModel($machine_number) {
     try {
         // Find the directory that matches st{machine_number}_*
@@ -273,10 +274,11 @@ function getCurrentModel($machine_number) {
         ];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Format file size in human-readable format
- */
+//-------------------------------------------------------------------------------------------------------
+// Format file size in human-readable format
+//-------------------------------------------------------------------------------------------------------
 function formatFileSize($bytes) {
     if ($bytes >= 1073741824) {
         return number_format($bytes / 1073741824, 2) . ' GB';
@@ -288,10 +290,11 @@ function formatFileSize($bytes) {
         return $bytes . ' bytes';
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Save model selection to configuration file
- */
+//-------------------------------------------------------------------------------------------------------
+// Save model selection to configuration file
+//-------------------------------------------------------------------------------------------------------
 function saveModelSelection($model_path, $machine_number) {
     try {
         // Find the directory that matches st{machine_number}_*
@@ -362,10 +365,11 @@ function saveModelSelection($model_path, $machine_number) {
         ];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Execute detection script command
- */
+//-------------------------------------------------------------------------------------------------------
+// Execute detection script command
+//-------------------------------------------------------------------------------------------------------
 function executeDetectionCommand($command, $cisloStroj) {
     $script_path = '/home/yolo/st2_plasty/Detekce_Obrazu/detekce_ulozeni.py';
 
@@ -410,10 +414,11 @@ function executeDetectionCommand($command, $cisloStroj) {
             return ['success' => false, 'message' => 'Unknown command: ' . $command];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Start the detection script
- */
+//-------------------------------------------------------------------------------------------------------
+// Start the detection script
+//-------------------------------------------------------------------------------------------------------
 function startDetection($script_path, $python_cmd, $cisloStroj) {
     // Check if already running
     $pid = getDetectionPid();
@@ -439,10 +444,11 @@ function startDetection($script_path, $python_cmd, $cisloStroj) {
         return ['success' => false, 'message' => 'Failed to start detection script'];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Stop the detection script
- */
+//-------------------------------------------------------------------------------------------------------
+// Stop the detection script
+//-------------------------------------------------------------------------------------------------------
 function stopDetection() {
     $pid = getDetectionPid();
     
@@ -475,10 +481,11 @@ function stopDetection() {
         }
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Get detection status
- */
+//-------------------------------------------------------------------------------------------------------
+// Get detection status
+//-------------------------------------------------------------------------------------------------------
 function getDetectionStatus() {
     $pid = getDetectionPid();
     
@@ -503,10 +510,11 @@ function getDetectionStatus() {
         return ['success' => true, 'message' => 'Detection is not running (cleaned up stale PID)'];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Get the PID of running detection script
- */
+//-------------------------------------------------------------------------------------------------------
+// Get the PID of running detection script
+//-------------------------------------------------------------------------------------------------------
 function getDetectionPid() {
     if (file_exists('/tmp/detection.pid')) {
         $pid = trim(file_get_contents('/tmp/detection.pid'));
@@ -516,18 +524,20 @@ function getDetectionPid() {
     }
     return null;
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Check if a process is running
- */
+//-------------------------------------------------------------------------------------------------------
+// Check if a process is running
+//-------------------------------------------------------------------------------------------------------
 function isProcessRunning($pid) {
     $result = shell_exec("ps -p $pid > /dev/null 2>&1; echo $?");
     return trim($result) === '0';
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Trigger photo taking by writing to machine's txt file
- */
+//-------------------------------------------------------------------------------------------------------
+//Trigger photo taking by writing to machine's txt file
+//-------------------------------------------------------------------------------------------------------
 function takePhoto($cisloStroj) {
     $num_file_path = "/opt/detection_triggers/num_" . $cisloStroj . ".txt";
     
@@ -562,10 +572,11 @@ function takePhoto($cisloStroj) {
         ];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Read the current value from machine's txt file
- */
+//-------------------------------------------------------------------------------------------------------
+// Read the current value from machine's txt file
+//-------------------------------------------------------------------------------------------------------
 function readMachineValue($cisloStroj) {
     $num_file_path = "/var/tmp/num_" . $cisloStroj . ".txt";
     
@@ -592,10 +603,11 @@ function readMachineValue($cisloStroj) {
         ];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Initialize machine's txt file with default value if it doesn't exist
- */
+//-------------------------------------------------------------------------------------------------------
+// Initialize machine's txt file with default value if it doesn't exist
+//-------------------------------------------------------------------------------------------------------
 function initializeMachineFile($cisloStroj) {
     $num_file_path = "/var/tmp/num_" . $cisloStroj . ".txt";
     
@@ -626,10 +638,11 @@ function initializeMachineFile($cisloStroj) {
         ];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
-/**
- * Save photo from nahledy to archiv
- */
+//-------------------------------------------------------------------------------------------------------
+// Save photo from nahledy to archiv
+//-------------------------------------------------------------------------------------------------------
 function savePhoto($cisloStroj) {
     $source_dir = "/var/www/html/nahledy/" . $cisloStroj;
     $dest_dir = "/media/archiv/yolo/" . $cisloStroj . "/sber";
@@ -735,6 +748,7 @@ function savePhoto($cisloStroj) {
         ];
     }
 }
+//-------------------------------------------------------------------------------------------------------
 
 // Execute the command
 try {
