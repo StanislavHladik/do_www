@@ -150,10 +150,14 @@ try {
     
     logMessage("Executing command: $command");
     
-    // Execute the command
-    exec($command, $output, $return_code);
+    // Execute the command using bash explicitly to handle shell features
+    $bash_command = "/bin/bash -c " . escapeshellarg($command);
+    exec($bash_command, $output, $return_code);
     
     logMessage("Command executed with return code: $return_code");
+    if (!empty($output)) {
+        logMessage("Command output: " . implode("\n", $output));
+    }
     logMessage("Training log will be written to: $training_log");
     
     // Return success response

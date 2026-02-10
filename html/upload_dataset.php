@@ -211,7 +211,7 @@ if ($extract_result === TRUE) {
     }
 
     // Run unzip.py script using the virtual environment
-    $venv_python = "/home/yolo/st99_trenink/Detekce_Obrazu_venv/bin/python";
+    $venv_python = "/home/yolo/st99_trenink/Detekce_Obrazu/Detekce_Obrazu_venv/bin/python";
     $unzip_script = "/home/yolo/st99_trenink/Detekce_Obrazu/utils/unzip.py";
     $detekce_dir = "/home/yolo/st99_trenink/Detekce_Obrazu";
     

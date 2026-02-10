@@ -17,19 +17,19 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="epochs"><i class="fa fa-repeat"></i> Počet epoch:</label>
-                        <input type="number" id="epochs" name="epochs" value="100" min="1" max="1000" class="form-control">
+                        <input type="number" id="epochs" name="epochs" value="700" min="1" max="1000" class="form-control">
                     </div>
                     
                     <div class="form-group">
                         <label for="batch-size"><i class="fa fa-th"></i> Velikost batch:</label>
-                        <input type="number" id="batch-size" name="batch-size" value="16" min="1" max="128" class="form-control">
+                        <input type="number" id="batch-size" name="batch-size" value="8" min="1" max="128" class="form-control">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="img-size"><i class="fa fa-image"></i> Velikost obrázku:</label>
-                        <input type="number" id="img-size" name="img-size" value="1920" min="1" max="65536" class="form-control">
+                        <input type="number" id="img-size" name="img-size" value="2012" min="1" max="65536" class="form-control">
                     </div>
                     
                     <div class="form-group">

@@ -16,7 +16,7 @@
                 <p><i class="fa fa-circle" style="color: #ccc;"></i> Žádný trénink neprobíhá</p>
             </div>
         </div>
-        
+
         <?php
         // Build the datasets folder path based on machine number
         $basePath = "/home/yolo";
@@ -37,7 +37,10 @@
             echo "Používá se adresář: <strong>{$foundDir}</strong>";
             echo '</div>';
         }
-        
+
+        // Dataset Upload Section
+        include 'views/upload_section.php';
+
         // Check if we found a matching directory and if the datasets directory exists
         if ($foundDir === null) {
             echo '<div class="alert alert-warning">';
@@ -110,9 +113,6 @@
             }
         }
         ?>
-
-        <!-- Dataset Upload Section -->
-        <?php include 'views/upload_section.php'; ?>
         
         <!-- Training Configuration Panel (reloadable) -->
         <div id="train-config-container">

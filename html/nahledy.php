@@ -28,12 +28,12 @@ else
             <div class="image-gallery" id="gallery"></div>
             
             <!-- Control Button -->
-            <div style="margin: 20px 0; padding: 15px; text-align: center;">
-                <button onclick="sendCombinedCommand()" class="control-btn" style="padding: 8px 16px; background-color: #FF6F00; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px; margin-right: 10px;">
+            <div style="margin: 20px 0; padding: 15px; text-align: left;">
+                <button onclick="sendCombinedCommand()" class="control-btn" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 20px; margin-right: 10px;">
                     Pořiď a Ulož
                 </button>
-                <button id="restart-service-btn" class="control-btn" onclick="restartDetectionService()" style="padding: 8px 16px; background-color: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
-                    <i class="fa fa-refresh"></i> Restartovat Službu
+                <button id="restart-service-btn" class="control-btn" onclick="restartDetectionService()" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 20px;">
+                     Restartovat Službu
                 </button>
                 <div id="statusDisplay" style="margin-top: 10px; 
                                                padding: 8px; 

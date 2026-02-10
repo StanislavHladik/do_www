@@ -1,9 +1,10 @@
 <footer class="site-footer">
     <!-- Control Panel -->
-    <div class="control-panel" style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px; border-top: 2px solid #ccc;">
+    <div class="control-panel" style="margin: 20px 0; padding: 15px; background-color: #f5f5f5; border-radius: 5px; border-top: 2px solid #ccc;">    
         <h4 style="margin: 0 0 15px 0; color: #333;">Ovládací panel</h4>
-        <div class="button-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button onclick="sendDetectionCommand('take_photo')" class="control-btn" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
+        <div class="button-group" style="display: flex; gap: 10px; flex-wrap: wrap;"> 
+            <!--                
+            <button onclick="sendDetectionCommand('take_photo')" class="control-btn" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 20px  ;">
                 Pořiď snímek
             </button> 
             <button onclick="sendDetectionCommand('save_photo')" class="control-btn" style="padding: 8px 16px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
@@ -11,8 +12,7 @@
             </button>
             <button onclick="sendCombinedCommand()" class="control-btn" style="padding: 8px 16px; background-color: #FF6F00; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 42px;">
                 Pořiď a Ulož
-            </button>
-            <!--        
+            </button>         
             <button onclick="sendDetectionCommand('start')" class="control-btn" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
                 ▶ Start Detection
             </button> 
@@ -24,9 +24,10 @@
             </button>
             <button onclick="sendDetectionCommand('restart')" class="control-btn" style="padding: 8px 16px; background-color: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
                 🔄 Restart
-            </button>
-            -->
-        </div>
+            </button>        
+            -->    
+        </div>    
+        <!--      
         <div id="statusDisplay" style="margin-top: 10px; 
                                        padding: 8px; 
                                        background-color: white; 
@@ -37,6 +38,7 @@
                                        color: black;">
             <strong>Status:</strong> <span id="statusText">Ready</span>
         </div>
+        -->  
     </div>
 
     <script>
