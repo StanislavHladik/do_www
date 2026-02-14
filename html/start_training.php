@@ -135,16 +135,25 @@ try {
     // Create a log file for training output
     $training_log = "/home/yolo/st99_trenink/Detekce_Obrazu/log/training_output_" . date('Y-m-d_H-i-s') . ".log";
     
+    // PID file to track running training process
+    $pid_file = "/home/yolo/st99_trenink/Detekce_Obrazu/log/training.pid";
+    
     // Build the command
     // Use nohup to prevent termination when HTTP connection closes
-    // Redirect stdout and stderr to log file
-    // Run in background with &
+    // The inner bash writes its own PID ($$) to the pid file, then uses exec to replace
+    // itself with Python, so the PID stays the same - this gives us the correct PID
     $command = sprintf(
-        'source %s && cd %s && nohup %s %s > %s 2>&1 &',
-        escapeshellarg($activate_script),
-        escapeshellarg($training_base),
-        escapeshellarg($python_bin),
-        escapeshellarg($python_script),
+        'nohup bash -c %s > %s 2>&1 &',
+        escapeshellarg(
+            sprintf(
+                'echo $$ > %s; cd %s; source %s; exec %s %s',
+                $pid_file,
+                $training_base,
+                $activate_script,
+                $python_bin,
+                $python_script
+            )
+        ),
         escapeshellarg($training_log)
     );
     
@@ -160,12 +169,26 @@ try {
     }
     logMessage("Training log will be written to: $training_log");
     
+    // Wait a moment for PID file to be written
+    usleep(100000); // 100ms
+    
+    // Read the PID from the pid file
+    $pid = null;
+    if (file_exists($pid_file)) {
+        $pid = trim(file_get_contents($pid_file));
+        logMessage("Training PID: $pid");
+    } else {
+        logMessage("Warning: PID file not found: $pid_file");
+    }
+    
     // Return success response
     echo json_encode([
         'success' => true,
         'message' => 'Trénink byl úspěšně zahájen',
         'config_file' => $config_file,
         'training_log' => $training_log,
+        'pid_file' => $pid_file,
+        'pid' => $pid,
         'config' => $config,
         'command' => $command
     ]);

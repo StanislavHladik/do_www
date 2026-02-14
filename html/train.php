@@ -144,6 +144,112 @@
 </main>
 
 <script>
+    // Store the current training PID
+    let currentTrainingPID = null;
+    
+    // Store the current training log file
+    let currentTrainingLog = null;
+    
+    // Progress polling interval
+    let progressPollingInterval = null;
+    
+    // Start polling for training progress
+    function startProgressPolling() {
+        // Clear any existing interval
+        if (progressPollingInterval) {
+            clearInterval(progressPollingInterval);
+        }
+        
+        // Poll every 2 seconds
+        progressPollingInterval = setInterval(updateTrainingProgress, 2000);
+        
+        // Also update immediately
+        updateTrainingProgress();
+    }
+    
+    // Stop polling for training progress
+    function stopProgressPolling() {
+        if (progressPollingInterval) {
+            clearInterval(progressPollingInterval);
+            progressPollingInterval = null;
+        }
+    }
+    
+    // Update training progress from server
+    function updateTrainingProgress() {
+        let url = 'get_training_progress.php';
+        if (currentTrainingLog) {
+            url += '?log_file=' + encodeURIComponent(currentTrainingLog);
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update progress bar
+                    const progressBar = document.getElementById('progress-bar');
+                    const percentage = data.progress.percentage || 0;
+                    progressBar.style.width = percentage + '%';
+                    progressBar.textContent = percentage.toFixed(1) + '%';
+                    
+                    // Update training status
+                    const statusHtml = data.running 
+                        ? '<p><i class="fa fa-circle" style="color: #28a745;"></i> Trénink probíhá' +
+                          (data.pid ? ' (PID: ' + data.pid + ')' : '') + '</p>'
+                        : (data.completed 
+                            ? '<p><i class="fa fa-check-circle" style="color: #28a745;"></i> Trénink dokončen</p>'
+                            : '<p><i class="fa fa-circle" style="color: #ccc;"></i> Trénink neprobíhá</p>');
+                    
+                    document.getElementById('training-status').innerHTML = statusHtml;
+                    
+                    // Update training log display
+                    const log = document.getElementById('training-log');
+                    let logHtml = '<p><strong>Průběh:</strong> Epocha ' + 
+                        data.progress.current_epoch + ' / ' + data.progress.total_epochs + '</p>';
+                    
+                    if (data.progress.total_batches > 0) {
+                        logHtml += '<p><strong>Batch:</strong> ' + 
+                            data.progress.batch_progress + ' / ' + data.progress.total_batches + '</p>';
+                    }
+                    
+                    if (data.metrics.gpu_mem) {
+                        logHtml += '<p><strong>GPU paměť:</strong> ' + data.metrics.gpu_mem + '</p>';
+                        logHtml += '<p><strong>Ztráty:</strong> box=' + data.metrics.box_loss.toFixed(4) + 
+                            ', obj=' + data.metrics.obj_loss.toFixed(4) + 
+                            ', cls=' + data.metrics.cls_loss.toFixed(4) + '</p>';
+                    }
+                    
+                    if (data.last_lines && data.last_lines.length > 0) {
+                        logHtml += '<hr><pre style="font-size: 11px; max-height: 150px; overflow-y: auto;">' + 
+                            data.last_lines.join('\n') + '</pre>';
+                    }
+                    
+                    log.innerHTML = logHtml;
+                    
+                    // Store PID if available
+                    if (data.pid) {
+                        currentTrainingPID = data.pid;
+                    }
+                    
+                    // If training completed or has error, stop polling
+                    if (data.completed || data.has_error || !data.running) {
+                        stopProgressPolling();
+                        
+                        if (data.completed) {
+                            document.getElementById('training-status').innerHTML = 
+                                '<p><i class="fa fa-check-circle" style="color: #28a745;"></i> Trénink úspěšně dokončen!</p>';
+                        } else if (data.has_error) {
+                            document.getElementById('training-status').innerHTML = 
+                                '<p><i class="fa fa-exclamation-triangle" style="color: #dc3545;"></i> Trénink skončil s chybou</p>';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching progress:', error);
+            });
+    }
+
     // Handle dataset upload form submission
     document.getElementById('dataset-upload-form').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -397,22 +503,29 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Store the PID for later use (stop training)
+                    currentTrainingPID = data.pid;
+                    
+                    // Store the training log file path
+                    currentTrainingLog = data.training_log;
+                    
                     // Show success message
                     document.getElementById('training-status').innerHTML = 
-                        '<p><i class="fa fa-check-circle" style="color: #28a745;"></i> ' + data.message + '</p>';
+                        '<p><i class="fa fa-check-circle" style="color: #28a745;"></i> ' + data.message + '</p>' +
+                        (data.pid ? '<p><small>PID procesu: <strong>' + data.pid + '</strong></small></p>' : '');
                     
                     // Update training log
                     const log = document.getElementById('training-log');
                     log.innerHTML = '<p><strong>Trénink zahájen úspěšně!</strong></p>' +
                         '<p>Konfigurační soubor: <code>' + data.config_file + '</code></p>' +
                         '<p>Log soubor: <code>' + data.training_log + '</code></p>' +
+                        (data.pid ? '<p>PID procesu: <code>' + data.pid + '</code></p>' : '') +
                         '<p>Parametry:</p>' +
                         '<pre>' + JSON.stringify(data.config, null, 2) + '</pre>' +
-                        '<p><em>Trénink probíhá na pozadí. Log můžete sledovat v souboru výše.</em></p>';
+                        '<p><em>Načítání průběhu tréninku...</em></p>';
                     
-                    // Show message about monitoring
-                    alert('Trénink byl úspěšně zahájen!\n\nTrénink probíhá na pozadí. ' +
-                        'Výsledky můžete sledovat v log souboru:\n' + data.training_log);
+                    // Start polling for progress updates
+                    startProgressPolling();
                     
                     // Re-enable button with different text
                     submitBtn.disabled = false;
@@ -459,9 +572,52 @@
 
     function stopTraining() {
         if (confirm('Opravdu chcete zastavit trénink?')) {
-            // TODO: Implement training stop via AJAX
-            document.getElementById('training-progress').style.display = 'none';
-            document.getElementById('training-status').innerHTML = '<p><i class="fa fa-circle" style="color: #dc3545;"></i> Trénink zastaven</p>';
+            // Stop progress polling
+            stopProgressPolling();
+            
+            // Show stopping status
+            document.getElementById('training-status').innerHTML = 
+                '<p><i class="fa fa-spinner fa-spin"></i> Zastavování tréninku...</p>';
+            
+            // Prepare form data with PID
+            const formData = new FormData();
+            if (currentTrainingPID) {
+                formData.append('pid', currentTrainingPID);
+            }
+            
+            // Send request to stop training
+            fetch('stop_training.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear stored PID and log file
+                    currentTrainingPID = null;
+                    currentTrainingLog = null;
+                    
+                    // Hide progress panel
+                    document.getElementById('training-progress').style.display = 'none';
+                    
+                    // Show stopped status
+                    document.getElementById('training-status').innerHTML = 
+                        '<p><i class="fa fa-circle" style="color: #dc3545;"></i> ' + data.message + '</p>' +
+                        (data.pid ? '<p><small>PID: ' + data.pid + ' byl ukončen</small></p>' : '');
+                    
+                    alert(data.message + (data.was_running ? '' : '\n(Proces již neběžel)'));
+                } else {
+                    document.getElementById('training-status').innerHTML = 
+                        '<p><i class="fa fa-exclamation-triangle" style="color: #dc3545;"></i> Chyba: ' + data.message + '</p>';
+                    alert('Chyba při zastavování tréninku:\n' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Stop training error:', error);
+                document.getElementById('training-status').innerHTML = 
+                    '<p><i class="fa fa-exclamation-triangle" style="color: #dc3545;"></i> Chyba sítě</p>';
+                alert('Chyba při komunikaci se serverem:\n' + error.message);
+            });
         }
     }
     
