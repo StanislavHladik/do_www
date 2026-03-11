@@ -54,9 +54,21 @@
             echo "Adresář modelů nenalezen v '{$foundDir}': {$modelsPath}";
             echo '</div>';
         } else {
+            // Get the current model from config file
+            $configPath = $matchingDirs[0] . "/Detekce_Obrazu/config/detekce_ulozeni.json";
+            $currentModelName = null;
+            
+            if (file_exists($configPath)) {
+                $configContent = file_get_contents($configPath);
+                $config = json_decode($configContent, true);
+                if ($config !== null && isset($config['weights_name'])) {
+                    $currentModelName = $config['weights_name'];
+                }
+            }
+            
             // Get all .pt files in the models directory
             $ptFiles = glob($modelsPath . "/*.pt");
-            
+
             if (empty($ptFiles)) {
                 echo '<div class="alert alert-info">';
                 echo '<i class="fa fa-info-circle"></i> ';
@@ -70,13 +82,18 @@
                     $filePath = $modelFile;
                     $fileSize = filesize($modelFile);
                     $fileDate = date("Y-m-d H:i:s", filemtime($modelFile));
+                    $isCurrentModel = ($currentModelName !== null && $currentModelName === $fileName);
                     
                     // Format file size
                     $sizeFormatted = formatFileSize($fileSize);
                     
-                    echo '<div class="model-card">';
+                    echo '<div class="model-card' . ($isCurrentModel ? ' active-model' : '') . '">';
                     echo '<div class="model-header">';
-                    echo '<h3><i class="fa fa-cube"></i> ' . htmlspecialchars($fileName) . '</h3>';
+                    echo '<h3><i class="fa fa-cube"></i> ' . htmlspecialchars($fileName);
+                    if ($isCurrentModel) {
+                        echo ' <span class="badge badge-success"><i class="fa fa-check"></i> Aktuálně vybraný</span>';
+                    }
+                    echo '</h3>';
                     echo '</div>';
                     
                     echo '<div class="model-details">';
@@ -342,6 +359,34 @@ function checkRestartStatus(intervalId) {
     })
     .catch(error => {
         console.error('Error checking restart status:', error);
+    });
+}
+
+function getActualModel() {
+    fetch('detection_api.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'get_current_model',
+            machine_number: '<?php echo($cisloStroj); ?>'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Current model retrieval result:', data);
+        
+        if (data.success) {
+            const currentModel = data.current_model;
+            console.log('Aktuálně vybraný model:', currentModel);
+            // You can use currentModel as needed
+        } else {
+            console.error('Chyba při získávání aktuálního modelu:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error retrieving current model:', error);
     });
 }
 

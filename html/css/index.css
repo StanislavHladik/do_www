@@ -1,0 +1,224 @@
+/* Index Page Specific Styles */
+/* Common styles (buttons, alerts, container, etc.) are inherited from style.css */
+
+/* Machine Grid Styles */
+.machine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.machine-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 2px solid #e0e0e0;
+}
+
+.machine-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    border-color: #007bff;
+}
+
+/* Special Machine Cards */
+.special-card {
+    position: relative;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.special-card.special-training {
+    border-color: #ffc107;
+}
+
+.special-card.special-training:hover {
+    border-color: #ff9800;
+    box-shadow: 0 8px 15px rgba(255, 152, 0, 0.3);
+}
+
+.special-card.special-training .machine-icon {
+    color: #ffc107;
+}
+
+.special-card.special-test {
+    border-color: #9c27b0;
+}
+
+.special-card.special-test:hover {
+    border-color: #7b1fa2;
+    box-shadow: 0 8px 15px rgba(156, 39, 176, 0.3);
+}
+
+.special-card.special-test .machine-icon {
+    color: #9c27b0;
+}
+
+/* Special Badges */
+.special-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.badge-training {
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: #fff;
+}
+
+.badge-test {
+    background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+    color: #fff;
+}
+
+.machine-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.machine-icon {
+    font-size: 48px;
+    color: #007bff;
+}
+
+.machine-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+}
+
+.machine-info {
+    margin-bottom: 20px;
+}
+
+.machine-info p {
+    margin: 8px 0;
+    color: #666;
+}
+
+.machine-info strong {
+    color: #333;
+}
+
+.machine-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Special single-button styling for training workspace */
+.special-training .machine-actions .btn-warning {
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+}
+
+.special-training .machine-actions .btn-warning:hover {
+    box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+}
+
+.machine-btn {
+    text-decoration: none;
+}
+
+/* Page Header (Index specific gradient) */
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.page-header h1 {
+    margin: 0 0 10px 0;
+    font-size: 36px;
+}
+
+.page-header p {
+    margin: 0;
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.no-machines {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+/* Section Headers */
+.section-header {
+    max-width: 1200px;
+    margin: 40px auto 20px;
+    padding: 0 20px;
+}
+
+.section-header h2 {
+    color: #333;
+    font-size: 28px;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-header p {
+    color: #666;
+    margin: 0;
+    font-size: 16px;
+    padding-left: 40px;
+}
+
+.section-header.special-section {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 3px solid #e0e0e0;
+}
+
+.section-header.special-section h2 {
+    color: #764ba2;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .machine-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .page-header h1 {
+        font-size: 28px;
+    }
+    
+    .section-header h2 {
+        font-size: 22px;
+    }
+    
+    .section-header p {
+        padding-left: 0;
+        font-size: 14px;
+    }
+    
+    .special-badge {
+        font-size: 9px;
+        padding: 4px 8px;
+    }
+}
