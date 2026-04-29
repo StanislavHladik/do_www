@@ -332,8 +332,13 @@ function saveModelSelection($model_path, $machine_number) {
             ];
         }
         
-        // Extract just the filename from the full path
-        $model_filename = basename($model_path);
+        // Build the models base path to compute a relative path (subfolder/file.pt)
+        $models_dir = "{$foundDir}/Detekce_Obrazu/models";
+        if (strpos($model_path, $models_dir . '/') === 0) {
+            $model_filename = substr($model_path, strlen($models_dir) + 1);
+        } else {
+            $model_filename = basename($model_path);
+        }
         
         // Update the weights_name field
         $config['weights_name'] = $model_filename;
