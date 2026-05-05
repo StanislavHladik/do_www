@@ -132,10 +132,10 @@
                             $currentModelName === $folderName . '/' . $ptName
                         ));
                         $radioId = 'radio-' . $safeFolderName . '-' . $idx;
-                        $isChecked = ($isThisFileCurrent || ($idx === 0 && !$isFolderActive));
+                        $isChecked = $isThisFileCurrent;
 
                         echo '<label class="model-file-radio' . ($isThisFileCurrent ? ' current-file' : '') . '" for="' . $radioId . '">';
-                        echo '<input type="radio" name="folder-' . $safeFolderName . '" id="' . $radioId . '" ';
+                        echo '<input type="radio" name="model_selection" id="' . $radioId . '" ';
                         echo 'value="' . htmlspecialchars($ptFile, ENT_QUOTES) . '" ';
                         echo 'data-name="' . htmlspecialchars($ptName, ENT_QUOTES) . '" ';
                         echo 'onchange="selectModel(this.dataset.name, this.value)"';
