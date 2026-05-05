@@ -46,6 +46,9 @@ else
                 <a href="models_offer.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
                     <i class="fa fa-cube"></i> Výběr modelů
                 </a>
+                <a href="archiv.php?cisloStroj=<?php echo($cisloStroj); ?>&nazevStroj=<?php echo($nazevStroj); ?>&popisStroj=<?php echo($popisStroj); ?>" class="nav-btn">
+                    <i class="fa fa-archive"></i> Archiv
+                </a>
             </nav>      
         </header>
         <script src="script/navigation.js"></script>
