@@ -230,8 +230,8 @@ include 'header.php';
 }
     .archiv-layout    { flex-direction: column; }
     .archiv-sidebar   { width: 100%; min-width: 0; max-height: 180px; }
-    .archiv-gallery   { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-}
+    .archiv-gallery   { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));}
+
 </style>
 
 <main>
@@ -290,7 +290,8 @@ let currentImages = [];   // filenames on the current page
 let lbIndex       = 0;    // index within currentImages for lightbox
 let activeSearch  = { dateFrom: '', dateTo: '' };
 
-// ── Init ──────────────────────────────────────────────────────
+// Use a request counter to ignore stale responses
+let loadSeq = 0;
 loadBatches();
 
 // ── Batch list ────────────────────────────────────────────────
@@ -330,8 +331,6 @@ function selectBatch(name) {
     }
     currentBatch = name;
     currentPage  = 1;
-    // Clear search when switching batches
-    clearSearch(false);
     const el = document.getElementById('batch-' + name);
     if (el) el.classList.add('active');
     document.getElementById('batch-title').textContent = 'Sběr: ' + name;
@@ -346,12 +345,10 @@ function applySearch() {
     if (currentBatch) loadImages(currentBatch, 1);
 }
 
-function clearSearch(resetInputs = true) {
+function clearSearch() {
     activeSearch = { dateFrom: '', dateTo: '' };
-    if (resetInputs) {
-        document.getElementById('search-from').value = '';
-        document.getElementById('search-to').value   = '';
-    }
+    document.getElementById('search-from').value = '';
+    document.getElementById('search-to').value   = '';
     updateSearchBadge();
     if (currentBatch) loadImages(currentBatch, 1);
 }
@@ -374,6 +371,7 @@ document.getElementById('search-to').addEventListener('keydown',   e => { if (e.
 
 // ── Images ───────────────────────────────────────────────────
 function loadImages(batch, page) {
+    const seq = ++loadSeq;  // stamp this request
     const gallery = document.getElementById('archiv-gallery');
     gallery.innerHTML = '<p class="archiv-placeholder">Načítání snímků…</p>';
     document.getElementById('archiv-pagination').innerHTML = '';
@@ -388,6 +386,7 @@ function loadImages(batch, page) {
     fetch(url)
         .then(r => r.json())
         .then(data => {
+            if (seq !== loadSeq) return;  // discard stale response
             currentImages = data.images || [];
             currentPage   = data.page;
             const countLabel = data.filtered
@@ -399,6 +398,7 @@ function loadImages(batch, page) {
             renderPagination(data.pages, data.page, batch);
         })
         .catch(() => {
+            if (seq !== loadSeq) return;
             gallery.innerHTML =
                 '<p class="archiv-placeholder">Chyba při načítání snímků</p>';
         });
