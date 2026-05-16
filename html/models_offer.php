@@ -66,27 +66,103 @@
                 }
             }
             
-            // Get all .pt files in the models directory
-            $ptFiles = glob($modelsPath . "/*.pt");
+            // Scan for subdirectory-grouped models and direct .pt files (legacy)
+            $subDirs = glob($modelsPath . "/*", GLOB_ONLYDIR);
+            $directPtFiles = glob($modelsPath . "/*.pt");
 
-            if (empty($ptFiles)) {
+            if (empty($subDirs) && empty($directPtFiles)) {
                 echo '<div class="alert alert-info">';
                 echo '<i class="fa fa-info-circle"></i> ';
-                echo "Nenalezeny žádné .pt soubory modelů v: {$modelsPath}";
+                echo "Nenalezeny žádné modely v: {$modelsPath}";
                 echo '</div>';
             } else {
                 echo '<div class="models-grid">';
                 
-                foreach ($ptFiles as $modelFile) {
+                // Folder-based model groups
+                foreach ($subDirs as $subDir) {
+                    $folderName = basename($subDir);
+                    $ptFilesInFolder = glob($subDir . "/*.pt");
+
+                    if (empty($ptFilesInFolder)) {
+                        continue;
+                    }
+
+                    // Check if any file in this folder is the current model
+                    // weights_name may be stored as "SubFolder/file.pt" or legacy "file.pt"
+                    $isFolderActive = false;
+                    foreach ($ptFilesInFolder as $pf) {
+                        $pfBase = basename($pf);
+                        if ($currentModelName !== null && (
+                            $pfBase === $currentModelName ||
+                            $folderName . '/' . $pfBase === $currentModelName
+                        )) {
+                            $isFolderActive = true;
+                            break;
+                        }
+                    }
+
+                    $fileCount = count($ptFilesInFolder);
+                    $folderTotalSize = array_sum(array_map('filesize', $ptFilesInFolder));
+                    $latestMtime = max(array_map('filemtime', $ptFilesInFolder));
+                    $safeFolderName = htmlspecialchars($folderName, ENT_QUOTES);
+
+                    echo '<div class="model-card folder-model-card' . ($isFolderActive ? ' active-model' : '') . '">';
+                    echo '<div class="model-header">';
+                    echo '<h3><i class="fa fa-folder-open"></i> ' . htmlspecialchars($folderName);
+                    if ($isFolderActive) {
+                        echo ' <span class="badge badge-success"><i class="fa fa-check"></i> Aktuálně aktivní</span>';
+                    }
+                    echo '</h3>';
+                    echo '</div>';
+
+                    echo '<div class="model-details">';
+                    echo '<p><strong>Počet modelů:</strong> ' . $fileCount . '</p>';
+                    echo '<p><strong>Celková velikost:</strong> ' . formatFileSize($folderTotalSize) . '</p>';
+                    echo '<p><strong>Poslední úprava:</strong> ' . date("Y-m-d H:i:s", $latestMtime) . '</p>';
+                    echo '</div>';
+
+                    echo '<div class="model-file-list">';
+                    echo '<p><strong><i class="fa fa-list"></i> Verze modelu:</strong></p>';
+                    foreach ($ptFilesInFolder as $idx => $ptFile) {
+                        $ptName = basename($ptFile);
+                        $ptSize = formatFileSize(filesize($ptFile));
+                        $ptDate = date("Y-m-d H:i:s", filemtime($ptFile));
+                        $isThisFileCurrent = ($currentModelName !== null && (
+                            $currentModelName === $ptName ||
+                            $currentModelName === $folderName . '/' . $ptName
+                        ));
+                        $radioId = 'radio-' . $safeFolderName . '-' . $idx;
+                        $isChecked = $isThisFileCurrent;
+
+                        echo '<label class="model-file-radio' . ($isThisFileCurrent ? ' current-file' : '') . '" for="' . $radioId . '">';
+                        echo '<input type="radio" name="model_selection" id="' . $radioId . '" ';
+                        echo 'value="' . htmlspecialchars($ptFile, ENT_QUOTES) . '" ';
+                        echo 'data-name="' . htmlspecialchars($ptName, ENT_QUOTES) . '" ';
+                        echo 'onchange="selectModel(this.dataset.name, this.value)"';
+                        echo ($isChecked ? ' checked' : '') . '>';
+                        echo '<span class="file-label">';
+                        echo '<span class="file-label-name"><i class="fa fa-cube"></i> ' . htmlspecialchars($ptName) . '</span>';
+                        if ($isThisFileCurrent) {
+                            echo ' <span class="badge badge-success"><i class="fa fa-check"></i> Aktivní</span>';
+                        }
+                        echo '<span class="file-label-meta">' . $ptSize . ' &bull; ' . $ptDate . '</span>';
+                        echo '</span>';
+                        echo '</label>';
+                    }
+                    echo '</div>'; // end model-file-list
+
+                    echo '</div>'; // end folder model-card
+                }
+
+                // Legacy: direct .pt files in models root
+                foreach ($directPtFiles as $modelFile) {
                     $fileName = basename($modelFile);
                     $filePath = $modelFile;
                     $fileSize = filesize($modelFile);
                     $fileDate = date("Y-m-d H:i:s", filemtime($modelFile));
                     $isCurrentModel = ($currentModelName !== null && $currentModelName === $fileName);
-                    
-                    // Format file size
                     $sizeFormatted = formatFileSize($fileSize);
-                    
+
                     echo '<div class="model-card' . ($isCurrentModel ? ' active-model' : '') . '">';
                     echo '<div class="model-header">';
                     echo '<h3><i class="fa fa-cube"></i> ' . htmlspecialchars($fileName);
@@ -95,23 +171,22 @@
                     }
                     echo '</h3>';
                     echo '</div>';
-                    
+
                     echo '<div class="model-details">';
                     echo '<p><strong>Cesta k souboru:</strong><br><code>' . htmlspecialchars($filePath) . '</code></p>';
                     echo '<p><strong>Velikost:</strong> ' . $sizeFormatted . '</p>';
                     echo '<p><strong>Upraveno:</strong> ' . $fileDate . '</p>';
                     echo '</div>';
-                    
+
                     echo '<div class="model-actions">';
-                    echo '<button class="btn btn-primary" onclick="selectModel(\'' . htmlspecialchars($fileName) . '\', \'' . htmlspecialchars($filePath) . '\')">';
+                    echo '<button class="btn btn-primary" onclick="selectModel(\'' . htmlspecialchars($fileName, ENT_QUOTES) . '\', \'' . htmlspecialchars($filePath, ENT_QUOTES) . '\')">';
                     echo '<i class="fa fa-check"></i> Vybrat Model';
                     echo '</button>';
-                    
-                    echo '<button class="btn btn-info" onclick="showModelInfo(\'' . htmlspecialchars($fileName) . '\')">';
+                    echo '<button class="btn btn-info" onclick="showModelInfo(\'' . htmlspecialchars($fileName, ENT_QUOTES) . '\')">';
                     echo '<i class="fa fa-info"></i> Detaily';
                     echo '</button>';
                     echo '</div>';
-                    
+
                     echo '</div>';
                 }
                 
@@ -158,6 +233,24 @@
 
 <script>
 // JavaScript functions for model selection and information
+
+// Select model from a folder card (reads the chosen radio button)
+function selectFolderModel(folderName) {
+    const radios = document.querySelectorAll('input[name="folder-' + folderName + '"]');
+    let selectedRadio = null;
+    for (const radio of radios) {
+        if (radio.checked) {
+            selectedRadio = radio;
+            break;
+        }
+    }
+    if (!selectedRadio) {
+        alert('Prosím vyberte verzi modelu.');
+        return;
+    }
+    selectModel(selectedRadio.dataset.name, selectedRadio.value);
+}
+
 function selectModel(modelName, modelPath) {
     // Show loading state
     const statusDiv = document.getElementById('selection-status');
