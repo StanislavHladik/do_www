@@ -6,6 +6,8 @@ if (isset($_GET['cisloStroj']) && isset($_GET['nazevStroj']) && isset($_GET['pop
     $cisloStroj = htmlspecialchars($_GET['cisloStroj']);
     $nazevStroj = htmlspecialchars($_GET['nazevStroj']);
     $popisStroj = htmlspecialchars($_GET['popisStroj']);
+    $cameraSerials = isset($_GET['cameraSerials']) ? json_decode($_GET['cameraSerials'], true) : [];
+    if (!is_array($cameraSerials)) { $cameraSerials = []; }
     /*
     echo "cisloStroj: " . $cisloStroj . "<br>";
     echo "nazevStroj: " . $nazevStroj . "<br>";
@@ -18,7 +20,24 @@ else
     $cisloStroj = "1";
     $nazevStroj = "testovaci_pracoviste";
     $popisStroj = "Kontrola svárů- Flídr Metal s.r.o.";
+    $cameraSerials = [];
     // echo "No parameters were passed!";
+}
+
+// If cameraSerials were not passed via URL, load them from the machine's config file
+if (empty($cameraSerials)) {
+    $basePath = "/home/yolo";
+    $matchingDirs = glob($basePath . "/st" . $cisloStroj . "_*", GLOB_ONLYDIR);
+    if (!empty($matchingDirs)) {
+        $configPath = $matchingDirs[0] . "/Detekce_Obrazu/config/detekce_ulozeni.json";
+        if (file_exists($configPath)) {
+            $config = json_decode(file_get_contents($configPath), true);
+            if (isset($config['camera_serial_numbers']) && is_array($config['camera_serial_numbers'])) {
+                usort($config['camera_serial_numbers'], fn($a, $b) => $a['order'] - $b['order']);
+                $cameraSerials = array_column($config['camera_serial_numbers'], 'serial');
+            }
+        }
+    }
 }
 ?>
 
@@ -63,6 +82,7 @@ else
         window.cisloStroj = "<?php echo $cisloStroj; ?>";
         window.nazevStroj = "<?php echo $nazevStroj; ?>";
         window.popisStroj = "<?php echo $popisStroj; ?>";
+        window.cameraSerials = <?php echo json_encode($cameraSerials); ?>;
         
         let previousImages = [];
 
@@ -74,6 +94,10 @@ else
             
             // Get machine number if available (from PHP variables)
             const cisloStroj = typeof window.cisloStroj !== 'undefined' ? window.cisloStroj : '1';
+            console.log('Machine number (cisloStroj):', cisloStroj);
+            
+            const cameraSerials = window.cameraSerials || [];
+            console.log('Camera Serials:', cameraSerials);
             
             // First, send take_photo command
             fetch('detection_api.php', {
@@ -84,6 +108,7 @@ else
                 body: JSON.stringify({
                     command: 'take_photo',
                     cisloStroj: cisloStroj,
+                    cameraSerials: cameraSerials,
                     timestamp: Date.now()
                 })
             })
@@ -102,6 +127,7 @@ else
                             body: JSON.stringify({
                                 command: 'save_photo',
                                 cisloStroj: cisloStroj,
+                                cameraSerials: cameraSerials,
                                 timestamp: Date.now()
                             })
                         })

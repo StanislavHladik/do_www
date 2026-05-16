@@ -71,9 +71,22 @@
                         $cisloStroj = $machine['number'];
                         $nazevStroj = str_replace('_', ' ', $machine['name']);
                         $popisStroj = "Pracovní stanice " . $machine['name'];
+
+                        // Load camera serial numbers from config
+                        $cameraSerials = [];
+                        $configPath = $machine['path'] . '/Detekce_Obrazu/config/detekce_ulozeni.json';
+                        if (file_exists($configPath)) {
+                            $config = json_decode(file_get_contents($configPath), true);
+                            if (isset($config['camera_serial_numbers']) && is_array($config['camera_serial_numbers'])) {
+                                usort($config['camera_serial_numbers'], fn($a, $b) => $a['order'] - $b['order']);
+                                $cameraSerials = array_column($config['camera_serial_numbers'], 'serial');
+                            }
+                        }
+
                         $nahledyUrl = "nahledy.php?cisloStroj=" . urlencode($cisloStroj) . 
                                       "&nazevStroj=" . urlencode($nazevStroj) . 
-                                      "&popisStroj=" . urlencode($popisStroj);
+                                      "&popisStroj=" . urlencode($popisStroj) .
+                                      "&cameraSerials=" . urlencode(json_encode($cameraSerials));
 
 
                         echo '<div style="cursor: pointer;" onclick="window.location=\'' . $nahledyUrl . '\';" class="machine-card">';
@@ -93,6 +106,12 @@
                         } else {
                             echo '<p><i class="fa fa-times-circle" style="color: #dc3545;"></i> Detekce nenalezena</p>';
                         }
+
+                        // Display camera serial numbers
+                        if (!empty($cameraSerials)) {
+                            echo '<p><strong>Sériová čísla kamer:</strong> ' . implode(', ', array_map('htmlspecialchars', $cameraSerials)) . '</p>';
+                        }
+
                         echo '</div>';
                         
                         echo '<div class="machine-actions">';
@@ -129,6 +148,17 @@
                         $cisloStroj = $machine['number'];
                         $nazevStroj = str_replace('_', ' ', $machine['name']);
                         $popisStroj = "Pracovní stanice " . $machine['name'];
+
+                        // Load camera serial numbers from config
+                        $cameraSerials = [];
+                        $configPath = $machine['path'] . '/Detekce_Obrazu/config/detekce_ulozeni.json';
+                        if (file_exists($configPath)) {
+                            $config = json_decode(file_get_contents($configPath), true);
+                            if (isset($config['camera_serial_numbers']) && is_array($config['camera_serial_numbers'])) {
+                                usort($config['camera_serial_numbers'], fn($a, $b) => $a['order'] - $b['order']);
+                                $cameraSerials = array_column($config['camera_serial_numbers'], 'serial');
+                            }
+                        }
                         
                         // Determine special machine type
                         $specialType = '';
@@ -163,6 +193,12 @@
                         } else {
                             echo '<p><i class="fa fa-times-circle" style="color: #dc3545;"></i> Detekce nenalezena</p>';
                         }
+
+                        // Display camera serial numbers
+                        if (!empty($cameraSerials)) {
+                            echo '<p><strong>Sériová čísla kamer:</strong> ' . implode(', ', array_map('htmlspecialchars', $cameraSerials)) . '</p>';
+                        }
+
                         echo '</div>';
                         
                         echo '<div class="machine-actions">';
@@ -180,7 +216,8 @@
                         elseif ($cisloStroj == '100') {
                             $nahledyUrl = "nahledy.php?cisloStroj=" . urlencode($cisloStroj) . 
                                          "&nazevStroj=" . urlencode($nazevStroj) . 
-                                         "&popisStroj=" . urlencode($popisStroj);
+                                         "&popisStroj=" . urlencode($popisStroj) .
+                                         "&cameraSerials=" . urlencode(json_encode($cameraSerials));
                             echo '<a href="' . $nahledyUrl . '" class="machine-btn btn-primary">';
                             echo '<i class="fa fa-image"></i> Testovací Náhledy';
                             echo '</a>';

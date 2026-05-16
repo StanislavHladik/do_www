@@ -73,9 +73,10 @@ if (!isset($input['command'])) {
 
 $command = htmlspecialchars($input['command']);
 $cisloStroj = isset($input['cisloStroj']) ? htmlspecialchars($input['cisloStroj']) : '1';
+$cameraSerials = (isset($input['cameraSerials']) && is_array($input['cameraSerials'])) ? $input['cameraSerials'] : [];
 
 // Log the request
-$log_entry = date('Y-m-d H:i:s') . " - Command: $command, Machine: $cisloStroj\n";
+$log_entry = date('Y-m-d H:i:s') . " - Command: $command, Machine: $cisloStroj, CameraSerials: " . json_encode($cameraSerials) . "\n";
 file_put_contents('/tmp/detection_api.log', $log_entry, FILE_APPEND | LOCK_EX);
 
 /**
@@ -375,7 +376,7 @@ function saveModelSelection($model_path, $machine_number) {
 //-------------------------------------------------------------------------------------------------------
 // Execute detection script command
 //-------------------------------------------------------------------------------------------------------
-function executeDetectionCommand($command, $cisloStroj) {
+function executeDetectionCommand($command, $cisloStroj, $cameraSerials = []) {
     $script_path = '/home/yolo/st2_plasty/Detekce_Obrazu/detekce_ulozeni.py';
 
     $python_cmd = 'python3';
@@ -408,7 +409,7 @@ function executeDetectionCommand($command, $cisloStroj) {
         case 'take_photo':
             return takePhoto($cisloStroj);
         case 'save_photo':
-            return savePhoto($cisloStroj);
+            return savePhoto($cisloStroj, $cameraSerials);
         case 'read_value':
             return readMachineValue($cisloStroj);
             
@@ -648,10 +649,24 @@ function initializeMachineFile($cisloStroj) {
 //-------------------------------------------------------------------------------------------------------
 // Save photo from nahledy to archiv
 //-------------------------------------------------------------------------------------------------------
-function savePhoto($cisloStroj) {
+function savePhoto($cisloStroj, $cameraSerials = []) {
     $source_dir = "/var/www/html/nahledy/" . $cisloStroj;
     $dest_dir = "/media/archiv/yolo/" . $cisloStroj . "/sber";
-    
+
+    // Always load serials from config file - most reliable source
+    $basePath = "/home/yolo";
+    $matchingDirs = glob($basePath . "/st" . $cisloStroj . "_*", GLOB_ONLYDIR);
+    if (!empty($matchingDirs)) {
+        $configPath = $matchingDirs[0] . "/Detekce_Obrazu/config/detekce_ulozeni.json";
+        if (file_exists($configPath)) {
+            $config = json_decode(file_get_contents($configPath), true);
+            if (isset($config['camera_serial_numbers']) && is_array($config['camera_serial_numbers'])) {
+                usort($config['camera_serial_numbers'], fn($a, $b) => $a['order'] - $b['order']);
+                $cameraSerials = array_column($config['camera_serial_numbers'], 'serial');
+            }
+        }
+    }
+
     try {
         // Check if source directory exists
         if (!is_dir($source_dir)) {
@@ -716,8 +731,14 @@ function savePhoto($cisloStroj) {
                 continue;
             }
             
-            // Create subdirectory based on first number
-            $sub_dest_dir = $dest_dir . '/' . $first_number;
+            // Map camera order (1-based) to serial number; fall back to order number if no serial available
+            $camera_order = intval($first_number);
+            $serial = (isset($cameraSerials[$camera_order - 1]) && $cameraSerials[$camera_order - 1] !== '')
+                ? $cameraSerials[$camera_order - 1]
+                : $first_number;
+
+            // Create subdirectory based on serial number
+            $sub_dest_dir = $dest_dir . '/' . $serial;
             if (!is_dir($sub_dest_dir)) {
                 if (!mkdir($sub_dest_dir, 0755, true)) {
                     continue; // Skip this file if can't create directory
@@ -761,7 +782,7 @@ try {
     $init_result = initializeMachineFile($cisloStroj);
     
     // Execute the requested command
-    $result = executeDetectionCommand($command, $cisloStroj);
+    $result = executeDetectionCommand($command, $cisloStroj, $cameraSerials);
     
     // Merge initialization result with command result
     $result = array_merge($init_result, $result);
